@@ -1,0 +1,103 @@
+	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	  <modelVersion>4.0.0</modelVersion>
+	  <groupId>com.api.automation</groupId>
+	  <artifactId>api-framework</artifactId>
+	  <version>1.0-SNAPSHOT</version>
+	  
+	  
+	
+	<properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+
+	  <dependencies>
+	    <!-- REST Assured -->
+	    <dependency>
+	      <groupId>io.rest-assured</groupId>
+	      <artifactId>rest-assured</artifactId>
+	      <version>5.3.1</version>
+	    </dependency>
+	
+	    <!-- SnakeYAML for reading priorities.yaml -->
+	    <dependency>
+	      <groupId>org.yaml</groupId>
+	      <artifactId>snakeyaml</artifactId>
+	      <version>2.2</version>
+	    </dependency>
+	
+	    <!-- Java Mail API -->
+	    <dependency>
+	      <groupId>com.sun.mail</groupId>
+	      <artifactId>javax.mail</artifactId>
+	      <version>1.6.2</version>
+	    </dependency>
+	
+	    <!-- Allure Reporting -->
+	    <dependency>
+	      <groupId>io.qameta.allure</groupId>
+	      <artifactId>allure-java-commons</artifactId>
+	      <version>2.24.0</version>
+	    </dependency>
+	    
+	    <dependency>
+    <groupId>io.qameta.allure</groupId>
+    <artifactId>allure-testng</artifactId>
+    <version>2.20.1</version>  <!-- or latest -->
+</dependency>
+
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-compress</artifactId>
+    <version>1.26.1</version> <!-- or latest -->
+</dependency>
+	
+	    <!-- TestNG (Optional if you want to structure tests) -->
+	    <dependency>
+	      <groupId>org.testng</groupId>
+	      <artifactId>testng</artifactId>
+	      <version>7.10.1</version>
+	      <scope>test</scope>
+	    </dependency>
+	    
+	    <!-- Allure REST Assured -->
+	    <dependency>
+	        <groupId>io.qameta.allure</groupId>
+	        <artifactId>allure-rest-assured</artifactId>
+	        <version>2.24.0</version>
+	    </dependency>
+	    
+	    
+		    <!-- SLF4J -->
+		    <dependency>
+	    <groupId>org.slf4j</groupId>
+	    <artifactId>slf4j-simple</artifactId>
+	    <version>1.7.36</version> 
+	</dependency>
+	
+	
+<dependency>
+    <groupId>com.itextpdf</groupId>
+    <artifactId>itext7-core</artifactId>
+    <version>7.2.3</version>
+    <type>pom</type>
+</dependency>
+
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.15.2</version> <!-- Or latest -->
+</dependency>
+
+	  </dependencies>
+	  
+	  <build>
+	    <plugins>
+	        <plugin>
+    <groupId>io.qameta.allure</groupId>
+    <artifactId>allure-maven</artifactId>
+    <version>2.11.2</version>
+</plugin>
+	    </plugins>
+	</build>
+	
+	</project>

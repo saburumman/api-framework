@@ -16,7 +16,6 @@ org-yaml-snakeyaml = "2.2"
 
 [libraries]
 com-itextpdf-itext7-core = { module = "com.itextpdf:itext7-core", version.ref = "com-itextpdf-itext7-core" }
-com-joacademy-automationframework = { module = "com.joacademy:AutomationFramework", version.ref = "com-joacademy-automationframework" }
 com-sun-mail-javax-mail = { module = "com.sun.mail:javax.mail", version.ref = "com-sun-mail-javax-mail" }
 io-qameta-allure-allure-java-commons = { module = "io.qameta.allure:allure-java-commons", version.ref = "io-qameta-allure-allure-java-commons" }
 io-qameta-allure-allure-rest-assured = { module = "io.qameta.allure:allure-rest-assured", version.ref = "io-qameta-allure-allure-rest-assured" }

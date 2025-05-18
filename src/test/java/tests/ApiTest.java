@@ -25,7 +25,7 @@ public class ApiTest {
             int statusCode = (int) result.get("status_code");
             String apiName = (String) result.get("api");
             if (statusCode != 200) {
-                System.out.println("⚠️ API FAILED: " + apiName + " with status: " + statusCode);
+                System.out.println("API FAILED: " + apiName + " with status: " + statusCode);
             }
         }
 

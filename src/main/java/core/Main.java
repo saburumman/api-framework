@@ -30,7 +30,7 @@ public class Main {
 
         // If you want to send a URL to email instead of archive file,
         // define the URL here, e.g.:
-        String allureReportUrl = "https://saburumman.github.io/api-framework/index.html";
+        String allureReportUrl = "https://saburumman.github.io/api-framework/allure-report/index.html";
 
         if (reader.loginApi != null) {
             System.out.println("Attempting to acquire auth token...");
@@ -38,7 +38,7 @@ public class Main {
             String token = acquireToken(authHandler, reader.loginApi);
             if (token != null) {
                 apiBase.setAuthToken(token);
-                System.out.println("Auth token acquired: " + token);
+               System.out.println("Auth token acquired: " + token);
             } else {
                 System.out.println("Failed to acquire auth token. Exiting.");
                 return results;
@@ -67,7 +67,6 @@ public class Main {
             if (!retryHandler.getFailedAPIs().isEmpty()) {
                 System.out.println("Starting Retry #2 for remaining failed APIs...");
                 List<Map<String, Object>> retry2Results = retryFailedApis(apiBase, retryHandler);
-                results.addAll(retry2Results);
                 EmailSender.sendResultsEmail(results, "Failed API Test Results Try #2 + Allure Report", allureReportUrl);
             }
         }
@@ -114,9 +113,9 @@ public class Main {
         Object statusObj = result.get("status_code");
         int statusCode = statusObj instanceof Integer ? (Integer) statusObj : -1;
         if (statusCode == 200) {
-            System.out.println("✅  API succeeded: " + api.name);
+            System.out.println(" API succeeded: " + api.name);
         } else {
-            System.out.println("⚠️  API failed: " + api.name + " (Status: " + statusCode + ")");
+            System.out.println(" API failed: " + api.name + " (Status: " + statusCode + ")");
         }
     }
 

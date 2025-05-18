@@ -1,0 +1,27 @@
+$Initializing API test execution...
+$Loading YAML file: priorities.yaml
+YAML loaded successfully.
+Environment: staging
+'Base URL: https://admin.joacademy.net
+%Attempting to acquire auth token...
+CExtracted Token: 4500202|zi4FOenr8fICR1nduv9YD9holrALoLkgMsmyIr6S
+GAuth token acquired: 4500202|zi4FOenr8fICR1nduv9YD9holrALoLkgMsmyIr6S
+" API succeeded: Get User Courses
+  API succeeded: Get User Files
+$ API succeeded: Get Favorite Files
+6 API failed: Get Favorite Files - Fail (Status: 405)
+4 API failed: Get User Courses - Typo (Status: 404)
+Email sent successfully.
+&Starting Retry #1 for failed APIs...
+6 API failed: Get Favorite Files - Fail (Status: 405)
+4 API failed: Get User Courses - Typo (Status: 404)
+Email sent successfully.
+0Starting Retry #2 for remaining failed APIs...
+6 API failed: Get Favorite Files - Fail (Status: 405)
+4 API failed: Get User Courses - Typo (Status: 404)
+Email sent successfully.
+8API FAILED: Get Favorite Files - Fail with status: 405
+8API FAILED: Get Favorite Files - Fail with status: 405
+6API FAILED: Get User Courses - Typo with status: 404
+6API FAILED: Get User Courses - Typo with status: 404
+HAPI monitoring run completed. Check logs or email reports for details.
