@@ -30,7 +30,7 @@ public class Main {
 
         // If you want to send a URL to email instead of archive file,
         // define the URL here, e.g.:
-        String allureReportUrl = "http://yourserver.com/allure-report/index.html";
+        String allureReportUrl = "https://saburumman.github.io/api-framework/index.html";
 
         if (reader.loginApi != null) {
             System.out.println("Attempting to acquire auth token...");
