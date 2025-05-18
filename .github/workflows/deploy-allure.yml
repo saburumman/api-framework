@@ -18,22 +18,19 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Print Java version
-        run: java -version
-
       - name: Install Allure CLI
         run: npm install -g allure-commandline --save-dev
 
       - name: Run Tests
         run: ./gradlew clean test
-        working-directory: ./api-framework
+        working-directory: ./  # 👈 ensures runner is in correct directory
 
       - name: Generate Allure Report
         run: allure generate --clean -o allure-report
-        working-directory: ./api-framework
+        working-directory: ./  # 👈 required if not in root
 
       - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./api-framework/allure-report
+          publish_dir: ./allure-report
