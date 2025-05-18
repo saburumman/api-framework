@@ -2,12 +2,12 @@
 <testng-results ignored="0" total="1" passed="1" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-05-18T13:09:49Z" name="Default suite" finished-at="2025-05-18T13:10:09Z" duration-ms="19912">
+  <suite started-at="2025-05-18T13:13:53Z" name="Default suite" finished-at="2025-05-18T13:14:13Z" duration-ms="20071">
     <groups>
     </groups>
-    <test started-at="2025-05-18T13:09:49Z" name="Default test" finished-at="2025-05-18T13:10:09Z" duration-ms="19912">
+    <test started-at="2025-05-18T13:13:53Z" name="Default test" finished-at="2025-05-18T13:14:13Z" duration-ms="20071">
       <class name="tests.ApiTest">
-        <test-method signature="executeApiFlow()[pri:0, instance:tests.ApiTest@66fdec9]" started-at="2025-05-18T13:09:49Z" name="executeApiFlow" description="Run Full API Scenario with Allure Steps" finished-at="2025-05-18T13:10:08Z" duration-ms="19834" status="PASS">
+        <test-method signature="executeApiFlow()[pri:0, instance:tests.ApiTest@66fdec9]" started-at="2025-05-18T13:13:53Z" name="executeApiFlow" description="Run Full API Scenario with Allure Steps" finished-at="2025-05-18T13:14:13Z" duration-ms="19976" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- executeApiFlow -->
