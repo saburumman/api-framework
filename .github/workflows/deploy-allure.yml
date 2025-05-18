@@ -1,0 +1,30 @@
+name: Deploy Allure Report
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'  # Adjust to your Java version
+
+    - name: Build Project and Generate Allure Report
+      run: |
+        ./gradlew clean test allureReport
+        # Or use mvn clean test site if you're using Maven
+
+    - name: Deploy Allure Report to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: build/reports/allure-report  # Adjust if needed
