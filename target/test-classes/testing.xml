@@ -4,7 +4,7 @@
     </listeners>
     <test name="API Tests">
         <packages>
-            <package name="com.api.automation.tests"/>
+            <package name="tests"/>
         </packages>
     </test>
 </suite>

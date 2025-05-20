@@ -42,9 +42,14 @@ publishing {
     }
 }
 
-// Configure the test task to use TestNG and the testng.xml file with Allure listener
-tasks.named('test') {
-    useTestNG() {
+// Correct test task configuration
+test {
+    useTestNG {
         suites 'src/test/resources/testng.xml'
+    }
+    systemProperty "allure.results.directory", "$buildDir/allure-results"
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
     }
 }

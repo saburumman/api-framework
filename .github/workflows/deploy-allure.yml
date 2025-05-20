@@ -26,11 +26,17 @@ jobs:
       - name: Install Allure CLI
         run: npm install -g allure-commandline
 
+      - name: Check Allure CLI version
+        run: allure --version
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run Tests
-        run: ./gradlew clean test
+      - name: Run Tests with Allure Results Directory Property
+        run: ./gradlew clean test -Dallure.results.directory=build/allure-results
+
+      - name: List Allure results files to verify generation
+        run: ls -la build/allure-results
 
       - name: Generate Allure Report
         run: allure generate build/allure-results --clean -o allure-report
