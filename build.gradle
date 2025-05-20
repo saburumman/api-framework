@@ -28,14 +28,17 @@ dependencies {
     implementation 'com.itextpdf:itext7-core:7.2.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 
-    testImplementation 'org.testng:testng:7.10.1'
+	testImplementation 'org.testng:testng:7.4.0'
 }
 
 group = 'com.api.automation'
 version = '1.0-SNAPSHOT'
 description = 'api-framework'
-java.sourceCompatibility = JavaVersion.VERSION_1_8
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
 publishing {
     publications {
         maven(MavenPublication) {

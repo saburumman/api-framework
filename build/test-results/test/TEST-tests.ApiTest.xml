@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tests.ApiTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-05-18T15:13:48" hostname="AMLQASRQA4204" time="51.244">
+<testsuite name="tests.ApiTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-05-20T07:11:56" hostname="AMLQASRQA4204" time="22.226">
   <properties/>
-  <testcase name="executeApiFlow" classname="tests.ApiTest" time="51.244"/>
+  <testcase name="executeApiFlow" classname="tests.ApiTest" time="22.226"/>
   <system-out><![CDATA[Initializing API test execution...
 Loading YAML file: priorities.yaml
 YAML loaded successfully.
 Environment: staging
 Base URL: https://admin.joacademy.net
 Attempting to acquire auth token...
-Extracted Token: 4500202|zi4FOenr8fICR1nduv9YD9holrALoLkgMsmyIr6S
-Auth token acquired: 4500202|zi4FOenr8fICR1nduv9YD9holrALoLkgMsmyIr6S
+Extracted Token: 4510617|bGKa35ZBohxP0WppxPDzZ6poVLs89hc6byM4MPpI
+Auth token acquired: 4510617|bGKa35ZBohxP0WppxPDzZ6poVLs89hc6byM4MPpI
  API succeeded: Get User Courses
  API succeeded: Get User Files
  API succeeded: Get Favorite Files
