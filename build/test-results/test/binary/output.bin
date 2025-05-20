@@ -4,8 +4,8 @@
 Environment: staging
 'Base URL: https://admin.joacademy.net
 %Attempting to acquire auth token...
-CExtracted Token: 4510617|bGKa35ZBohxP0WppxPDzZ6poVLs89hc6byM4MPpI
-GAuth token acquired: 4510617|bGKa35ZBohxP0WppxPDzZ6poVLs89hc6byM4MPpI
+CExtracted Token: 4511073|mX8gWMXL5eQOoQkgESrRyvqq0fMlcMHZbpAGZlP9
+GAuth token acquired: 4511073|mX8gWMXL5eQOoQkgESrRyvqq0fMlcMHZbpAGZlP9
 " API succeeded: Get User Courses
   API succeeded: Get User Files
 $ API succeeded: Get Favorite Files

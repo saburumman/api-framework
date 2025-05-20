@@ -1,0 +1,2 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Tue May 20 11:13:53 EET 2025","Tue May 20 11:14:13 EET 2025","19880","Default suite","Default test","tests.ApiTest","tests.ApiTest","executeApiFlow","Run Full API Scenario with Allure Steps",""
