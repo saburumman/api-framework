@@ -46,6 +46,8 @@ publishing {
 test {
     useTestNG {
         suites 'src/test/resources/testng.xml'
+        // add listener here:
+        listeners << 'io.qameta.allure.testng.AllureTestNg'
     }
     systemProperty "allure.results.directory", "$buildDir/allure-results"
     testLogging {

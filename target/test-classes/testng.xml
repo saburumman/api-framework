@@ -1,11 +1,11 @@
-<!DOCTYPE suite SYSTEM "dtd/testng-1.0.dtd">
-<suite name="AllureSuite" verbose="1">
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="APITestSuite">
     <listeners>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>
-    <test name="API Tests">
-        <packages>
-            <package name="com.api.automation.tests"/>
-        </packages>
+    <test name="RunAPI">
+        <classes>
+            <class name="tests.ApiTest"/>
+        </classes>
     </test>
 </suite>
