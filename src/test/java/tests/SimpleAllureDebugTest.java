@@ -12,6 +12,6 @@ public class SimpleAllureDebugTest {
     public void simpleAllureTest() {
     	  Allure.step("Step 1: Starting test");
           Allure.addAttachment("Test Message", "text/plain", "This is a debug attachment", ".txt");
-          System.out.println("Running simple test");
+        //  System.out.println("Running simple test");
     }
 }
