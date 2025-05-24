@@ -1,1 +1,1 @@
-[{"uid":"8ccb6a1cd868067a","name":"Run Full API Scenario with Allure Steps","time":{"start":1747827128352,"stop":1747827135145,"duration":6793},"status":"passed","severity":"critical"}]
+[{"uid":"3cf50cd9ce950fd8","name":"Run Full API Scenario with Allure Steps","time":{"start":1748082458004,"stop":1748082461285,"duration":3281},"status":"passed","severity":"critical"},{"uid":"40a00d7abaf34dbb","name":"Run Failed API's","time":{"start":1748082461334,"stop":1748082466085,"duration":4751},"status":"failed","severity":"critical"}]
