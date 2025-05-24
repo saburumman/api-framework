@@ -6,6 +6,8 @@
     <test name="RunAPI">
         <classes>
             <class name="tests.ApiTest"/>
+            <class name="tests.FailedTest"/>
+            <class name="tests.Finalizer"/> <!-- ✅ Add this line -->
         </classes>
     </test>
 </suite>

@@ -6,81 +6,95 @@ import utils.EmailSender;
 
 import io.qameta.allure.Step;
 
-import java.io.File;
 import java.util.*;
 
 public class Main {
 
     public static List<Map<String, Object>> runFullScenario() {
-
         System.out.println("Initializing API test execution...");
 
+        // Load priorities.yaml and parse APIs
         PrioritiesReader reader = new PrioritiesReader();
-        reader.load("priorities.yaml");
+        reader.load("priorities.yaml");  // make sure this reads your YAML properly!
 
         System.out.println("Environment: " + reader.env);
         System.out.println("Base URL: " + reader.baseUrl);
 
+        // Create shared APIBase and RetryHandler instances once
         APIBase apiBase = new APIBase(reader.baseUrl);
         RetryHandler retryHandler = new RetryHandler();
-        List<Map<String, Object>> results = new ArrayList<>();
 
-        // Compress Allure report as tar.gz (assuming your method returns a File)
-       // File allureArchive = EmailSender.compressAllureReportZip("allure-report");
+        // Get requested API group from system property
+        String selectedGroup = System.getProperty("apiGroup");
+        if (selectedGroup == null || selectedGroup.isEmpty()) {
+            System.out.println("⚠️ No specific API group provided. Running all groups in priorities.yaml...");
+        } else if (!reader.groupedApis.containsKey(selectedGroup)) {
+            System.out.println("❌ Group '" + selectedGroup + "' not found. Exiting.");
+            return Collections.emptyList();
+        }
 
-        // If you want to send a URL to email instead of archive file,
-        // define the URL here, e.g.:
-       // String allureReportUrl = "https://saburumman.github.io/api-framework/allure-report/index.html";
-        String allureReportUrl = "https://saburumman.github.io/api-framework/";
-
+        // Handle login API (auth token acquisition)
         if (reader.loginApi != null) {
             System.out.println("Attempting to acquire auth token...");
             AuthHandler authHandler = new AuthHandler(apiBase);
             String token = acquireToken(authHandler, reader.loginApi);
             if (token != null) {
                 apiBase.setAuthToken(token);
-               System.out.println("Auth token acquired: " + token);
+                System.out.println("Auth token acquired: " + token);
             } else {
                 System.out.println("Failed to acquire auth token. Exiting.");
-                return results;
+                return Collections.emptyList();
             }
         } else {
             System.out.println("No login API configured.");
         }
 
-        // First Run
-        List<Map<String, Object>> firstRunResults = runAndTrackFailures(apiBase, reader.apis, retryHandler);
-        results.addAll(firstRunResults);
-        // Send email with URL instead of file to match EmailSender signature
-        EmailSender.sendResultsEmail(results, "API Test Results + Allure Report", allureReportUrl);
+        List<Map<String, Object>> allResults = new ArrayList<>();
 
-        // Retry #1
-        if (!retryHandler.getFailedAPIs().isEmpty()) {
-            System.out.println("Starting Retry #1 for failed APIs...");
-            List<Map<String, Object>> retry1Results = retryFailedApis(apiBase, retryHandler);
-            results.addAll(retry1Results);
-            EmailSender.sendResultsEmail(results, "Failed API Test Results Try #1 + Allure Report", allureReportUrl);
-
-            // Track failures from retry #1 for retry #2
-            trackFailuresFromResults(retry1Results, retryHandler, reader.apis);
-
-            // Retry #2
-            if (!retryHandler.getFailedAPIs().isEmpty()) {
-                System.out.println("Starting Retry #2 for remaining failed APIs...");
-                List<Map<String, Object>> retry2Results = retryFailedApis(apiBase, retryHandler);
-                EmailSender.sendResultsEmail(results, "Failed API Test Results Try #2 + Allure Report", allureReportUrl);
+        if (selectedGroup != null && !selectedGroup.isEmpty()) {
+            // Run only the specified group
+            reader.apis = reader.groupedApis.get(selectedGroup);
+            System.out.println("Running group: " + selectedGroup + ", APIs count: " + reader.apis.size());
+            List<Map<String, Object>> groupResults = runAndRetryGroup(apiBase, retryHandler, reader.apis);
+            allResults.addAll(groupResults);
+            TestResultHolder.addResults(groupResults);
+        } else {
+            // Run all groups
+            for (Map.Entry<String, List<APIInfo>> entry : reader.groupedApis.entrySet()) {
+                System.out.println("Running group: " + entry.getKey() + ", APIs count: " + entry.getValue().size());
+                reader.apis = entry.getValue();
+                List<Map<String, Object>> groupResults = runAndRetryGroup(apiBase, retryHandler, reader.apis);
+                allResults.addAll(groupResults);
+                TestResultHolder.addResults(groupResults);
             }
+        }
+
+        return allResults;
+    }
+
+    // Helper method to run APIs and retry failures
+    private static List<Map<String, Object>> runAndRetryGroup(APIBase apiBase, RetryHandler retryHandler, List<APIInfo> apis) {
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        // First run
+        List<Map<String, Object>> firstRunResults = runAndTrackFailures(apiBase, apis, retryHandler);
+        results.addAll(firstRunResults);
+
+        // Retry failed APIs up to 2 times
+        for (int retryAttempt = 1; retryAttempt <= 2 && !retryHandler.getFailedAPIs().isEmpty(); retryAttempt++) {
+            System.out.println("Starting Retry #" + retryAttempt + " for failed APIs...");
+            List<Map<String, Object>> retryResults = retryFailedApis(apiBase, retryHandler);
+            results.addAll(retryResults);
+            trackFailuresFromResults(retryResults, retryHandler, apis);
         }
 
         return results;
     }
 
-    // Helper method to track failures from retry results
     private static void trackFailuresFromResults(List<Map<String, Object>> results, RetryHandler retryHandler, List<APIInfo> apis) {
         retryHandler.clearFailures();
         for (Map<String, Object> result : results) {
-            Object statusObj = result.get("status_code");
-            int statusCode = statusObj instanceof Integer ? (Integer) statusObj : -1;
+            int statusCode = getStatusCode(result);
             if (statusCode != 200) {
                 APIInfo failedApi = findApiByName(apis, (String) result.get("api"));
                 if (failedApi != null) {
@@ -95,12 +109,10 @@ public class Main {
         return handler.getToken(loginApi);
     }
 
-    @Step("Executing API: {api.name}")
+    @Step("Executing API")
     public static Map<String, Object> executeApi(APIBase apiBase, APIInfo api) {
         Map<String, Object> result = apiBase.sendRequest(api.method, api.endpoint, api.payload);
-        if (result == null) {
-            result = new HashMap<>();
-        }
+        if (result == null) result = new HashMap<>();
         result.put("api", api.name);
         result.put("endpoint", api.endpoint);
         result.put("method", api.method);
@@ -109,10 +121,9 @@ public class Main {
         return result;
     }
 
-    @Step("Logging API status for: {api.name}")
+    @Step("Logging API status")
     public static void logStatus(APIInfo api, Map<String, Object> result) {
-        Object statusObj = result.get("status_code");
-        int statusCode = statusObj instanceof Integer ? (Integer) statusObj : -1;
+        int statusCode = getStatusCode(result);
         if (statusCode == 200) {
             System.out.println(" API succeeded: " + api.name);
         } else {
@@ -122,15 +133,13 @@ public class Main {
 
     @Step("Running API Set and Tracking Failures")
     public static List<Map<String, Object>> runAndTrackFailures(APIBase apiBase, List<APIInfo> apis, RetryHandler retryHandler) {
-        retryHandler.clearFailures();  // Clear before starting
+        retryHandler.clearFailures();
         List<Map<String, Object>> runResults = new ArrayList<>();
         for (APIInfo api : apis) {
             Map<String, Object> result = executeApi(apiBase, api);
             runResults.add(result);
             logStatus(api, result);
-            Object statusObj = result.get("status_code");
-            int statusCode = statusObj instanceof Integer ? (Integer) statusObj : -1;
-            if (statusCode != 200) {
+            if (getStatusCode(result) != 200) {
                 retryHandler.trackFailure(api);
             }
         }
@@ -139,16 +148,14 @@ public class Main {
 
     @Step("Retrying Failed APIs")
     public static List<Map<String, Object>> retryFailedApis(APIBase apiBase, RetryHandler retryHandler) {
-        List<APIInfo> failedApisBeforeRetry = new ArrayList<>(retryHandler.getFailedAPIs());
-        retryHandler.clearFailures();  // Clear before retry to avoid duplicates
+        List<APIInfo> failedApis = new ArrayList<>(retryHandler.getFailedAPIs());
+        retryHandler.clearFailures();
         List<Map<String, Object>> retryResults = new ArrayList<>();
-        for (APIInfo api : failedApisBeforeRetry) {
+        for (APIInfo api : failedApis) {
             Map<String, Object> result = executeApi(apiBase, api);
             retryResults.add(result);
             logStatus(api, result);
-            Object statusObj = result.get("status_code");
-            int statusCode = statusObj instanceof Integer ? (Integer) statusObj : -1;
-            if (statusCode != 200) {
+            if (getStatusCode(result) != 200) {
                 retryHandler.trackFailure(api);
             }
         }
@@ -156,12 +163,11 @@ public class Main {
     }
 
     public static APIInfo findApiByName(List<APIInfo> apis, String name) {
-        if (name == null) return null;
-        for (APIInfo api : apis) {
-            if (api.name.equals(name)) {
-                return api;
-            }
-        }
-        return null;
+        return apis.stream().filter(api -> api.name.equals(name)).findFirst().orElse(null);
+    }
+
+    private static int getStatusCode(Map<String, Object> result) {
+        Object statusObj = result.get("status_code");
+        return statusObj instanceof Integer ? (Integer) statusObj : -1;
     }
 }

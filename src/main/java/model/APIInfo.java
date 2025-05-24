@@ -1,6 +1,5 @@
 package model;
 
-// Represents metadata for a single API
 public class APIInfo {
     public String name;
     public String endpoint;
@@ -13,8 +12,12 @@ public class APIInfo {
         this.endpoint = endpoint;
         this.method = method;
         this.priority = priority;
-        this.payload = payload;
+        this.payload = payload != null ? payload : "";
     }
-    
-}
 
+    @Override
+    public String toString() {
+        return String.format("APIInfo{name='%s', endpoint='%s', method='%s', priority='%s'}",
+                name, endpoint, method, priority);
+    }
+}

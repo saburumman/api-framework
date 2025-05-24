@@ -19,6 +19,7 @@ public class ApiTest {
     @Story("Initial Run + Retries")
     @Severity(SeverityLevel.CRITICAL)
     public void executeApiFlow() {
+        System.setProperty("apiGroup", "courses");
         stepStartScenario();
         List<Map<String, Object>> results = Main.runFullScenario();
         stepCheckResults(results);

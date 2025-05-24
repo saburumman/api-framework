@@ -5,20 +5,23 @@
 Environment: staging
 'Base URL: https://admin.joacademy.net
 %Attempting to acquire auth token...
-CExtracted Token: 4517283|LjCik7kaKTUpT5BO6r6eRJnfHX8uJjFBiOX2Pk8A
-GAuth token acquired: 4517283|LjCik7kaKTUpT5BO6r6eRJnfHX8uJjFBiOX2Pk8A
+CExtracted Token: 4533252|V108QRVUvv1IDFlfopKHs5UPBc3UnZafCubckNHF
+GAuth token acquired: 4533252|V108QRVUvv1IDFlfopKHs5UPBc3UnZafCubckNHF
+'Running group: courses, APIs count: 1
 " API succeeded: Get User Courses
-  API succeeded: Get User Files
-$ API succeeded: Get Favorite Files
-6 API failed: Get Favorite Files - Fail (Status: 405)
-4 API failed: Get User Courses - Typo (Status: 404)
-Email sent successfully.
-&Starting Retry #1 for failed APIs...
-6 API failed: Get Favorite Files - Fail (Status: 405)
-4 API failed: Get User Courses - Typo (Status: 404)
-Email sent successfully.
-0Starting Retry #2 for remaining failed APIs...
-6 API failed: Get Favorite Files - Fail (Status: 405)
-4 API failed: Get User Courses - Typo (Status: 404)
-Email sent successfully.
-8API FAILED: Get Favorite Files - Fail with status: 405
+API scenario started
+$Initializing API test execution...
+$Loading YAML file: priorities.yaml
+YAML loaded successfully.
+Environment: staging
+'Base URL: https://admin.joacademy.net
+%Attempting to acquire auth token...
+CExtracted Token: 4533257|2lpxJkxbvVywv9eRdCzpI7AHlcx0vaFoLs6ZWls0
+GAuth token acquired: 4533257|2lpxJkxbvVywv9eRdCzpI7AHlcx0vaFoLs6ZWls0
+%Running group: files, APIs count: 1
+6 API failed: Get Favorite Files - Fail (Status: 404)
+&Starting Retry #1 for failed APIs...
+6 API failed: Get Favorite Files - Fail (Status: 404)
+&Starting Retry #2 for failed APIs...
+6 API failed: Get Favorite Files - Fail (Status: 404)
+8API FAILED: Get Favorite Files - Fail with status: 404
