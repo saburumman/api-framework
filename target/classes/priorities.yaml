@@ -11,7 +11,7 @@ login_api:
 groups:
   courses:
     - name: "Get User Courses"
-      endpoint: "/api/v2/courss/user?page=1&per_page=12&satus=true"
+      endpoint: "/api/v2/cours/user?page=1&per_page=12&satus=true"
       method: "GET"
       priority: "medium"
 
