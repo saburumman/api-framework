@@ -7,97 +7,142 @@ import utils.EmailSender;
 import io.qameta.allure.Step;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
+    public static String allureReportUrl = "https://saburumman.github.io/api-framework/index.html";
+
     public static List<Map<String, Object>> runFullScenario() {
-        System.out.println("Initializing API test execution...");
+        Logger.info("Initializing API test execution...");
 
-        // Load priorities.yaml and parse APIs
-        PrioritiesReader reader = new PrioritiesReader();
-        reader.load("priorities.yaml");  // make sure this reads your YAML properly!
-
-        System.out.println("Environment: " + reader.env);
-        System.out.println("Base URL: " + reader.baseUrl);
-
-        // Create shared APIBase and RetryHandler instances once
-        APIBase apiBase = new APIBase(reader.baseUrl);
-        RetryHandler retryHandler = new RetryHandler();
-
-        // Get requested API group from system property
         String selectedGroup = System.getProperty("apiGroup");
         if (selectedGroup == null || selectedGroup.isEmpty()) {
-            System.out.println("⚠️ No specific API group provided. Running all groups in priorities.yaml...");
-        } else if (!reader.groupedApis.containsKey(selectedGroup)) {
-            System.out.println("❌ Group '" + selectedGroup + "' not found. Exiting.");
+            Logger.info("No API group specified. Use -DapiGroup=<group> when running.");
             return Collections.emptyList();
         }
 
-        // Handle login API (auth token acquisition)
+        PrioritiesReader reader = new PrioritiesReader();
+        reader.load("priorities.yaml");
+
+        Logger.info("Environment: " + reader.env);
+        Logger.info("Base URL: " + reader.baseUrl);
+
+        if (!reader.groupedApis.containsKey(selectedGroup)) {
+            Logger.info("Group '" + selectedGroup + "' not found. Exiting.");
+            return Collections.emptyList();
+        }
+
+        reader.apis = reader.groupedApis.get(selectedGroup);
+        Logger.info("Loaded group: " + selectedGroup + ", APIs count: " + reader.apis.size());
+
+        APIBase apiBase = initializeApiContext(reader);
+        if (apiBase == null) return Collections.emptyList();
+
+        RetryHandler retryHandler = new RetryHandler();
+        Map<String, Map<String, Object>> latestResultsMap = runScenarioWithRetries(apiBase, reader.apis, retryHandler);
+
+        List<APIInfo> failedAfterThreeRuns = new ArrayList<>(retryHandler.getFailedAPIs());
+        if (!failedAfterThreeRuns.isEmpty()) {
+            List<Map<String, Object>> failedApiMaps = toApiInfoMaps(failedAfterThreeRuns);
+            EmailSender.sendFailureEmail(failedApiMaps, allureReportUrl);
+            handleFinalRetry(apiBase, failedAfterThreeRuns);
+        }
+
+        List<Map<String, Object>> finalResults = new ArrayList<>(latestResultsMap.values());
+        TestResultHolder.addResults(finalResults);
+        return finalResults;
+    }
+
+    private static APIBase initializeApiContext(PrioritiesReader reader) {
+        APIBase apiBase = new APIBase(reader.baseUrl);
         if (reader.loginApi != null) {
-            System.out.println("Attempting to acquire auth token...");
+            Logger.info("Attempting to acquire auth token...");
             AuthHandler authHandler = new AuthHandler(apiBase);
             String token = acquireToken(authHandler, reader.loginApi);
             if (token != null) {
                 apiBase.setAuthToken(token);
-                System.out.println("Auth token acquired: " + token);
+                Logger.info("Auth token acquired: " + token);
             } else {
-                System.out.println("Failed to acquire auth token. Exiting.");
-                return Collections.emptyList();
+                Logger.info("Failed to acquire auth token. Exiting.");
+                return null;
             }
         } else {
-            System.out.println("No login API configured.");
+            Logger.info("No login API configured.");
         }
-
-        List<Map<String, Object>> allResults = new ArrayList<>();
-
-        if (selectedGroup != null && !selectedGroup.isEmpty()) {
-            // Run only the specified group
-            reader.apis = reader.groupedApis.get(selectedGroup);
-            System.out.println("Running group: " + selectedGroup + ", APIs count: " + reader.apis.size());
-            List<Map<String, Object>> groupResults = runAndRetryGroup(apiBase, retryHandler, reader.apis);
-            allResults.addAll(groupResults);
-            TestResultHolder.addResults(groupResults);
-        } else {
-            // Run all groups
-            for (Map.Entry<String, List<APIInfo>> entry : reader.groupedApis.entrySet()) {
-                System.out.println("Running group: " + entry.getKey() + ", APIs count: " + entry.getValue().size());
-                reader.apis = entry.getValue();
-                List<Map<String, Object>> groupResults = runAndRetryGroup(apiBase, retryHandler, reader.apis);
-                allResults.addAll(groupResults);
-                TestResultHolder.addResults(groupResults);
-            }
-        }
-
-        return allResults;
+        return apiBase;
     }
 
-    // Helper method to run APIs and retry failures
-    private static List<Map<String, Object>> runAndRetryGroup(APIBase apiBase, RetryHandler retryHandler, List<APIInfo> apis) {
-        List<Map<String, Object>> results = new ArrayList<>();
+    private static Map<String, Map<String, Object>> runScenarioWithRetries(APIBase apiBase, List<APIInfo> apis, RetryHandler retryHandler) {
+        Map<String, Map<String, Object>> resultsMap = new LinkedHashMap<>();
 
-        // First run
-        List<Map<String, Object>> firstRunResults = runAndTrackFailures(apiBase, apis, retryHandler);
-        results.addAll(firstRunResults);
+        List<Map<String, Object>> firstRun = runAndTrackFailures(apiBase, apis, retryHandler);
+        for (Map<String, Object> result : firstRun) {
+            resultsMap.put((String) result.get("api"), result);
+        }
 
-        // Retry failed APIs up to 2 times
         for (int retryAttempt = 1; retryAttempt <= 2 && !retryHandler.getFailedAPIs().isEmpty(); retryAttempt++) {
-            System.out.println("Starting Retry #" + retryAttempt + " for failed APIs...");
+            Logger.info("Starting Retry #" + retryAttempt + " for failed APIs...");
             List<Map<String, Object>> retryResults = retryFailedApis(apiBase, retryHandler);
-            results.addAll(retryResults);
+            for (Map<String, Object> result : retryResults) {
+                resultsMap.put((String) result.get("api"), result);
+            }
             trackFailuresFromResults(retryResults, retryHandler, apis);
         }
 
-        return results;
+        return resultsMap;
+    }
+
+    private static void handleFinalRetry(APIBase apiBase, List<APIInfo> failedAfterThreeRuns) {
+
+        try {
+            Logger.info("Waiting 10 minutes before final retry...");
+            Thread.sleep(600_000);
+        } catch (InterruptedException e) {
+            Logger.info("Wait interrupted: " + e.getMessage());
+        }
+
+        RetryHandler finalRetryHandler = new RetryHandler();
+        List<Map<String, Object>> finalRetryResults = retryFailedApis(apiBase, failedAfterThreeRuns, finalRetryHandler);
+
+        List<APIInfo> backToNormal = new ArrayList<>();
+        List<APIInfo> stillFailing = new ArrayList<>();
+        for (APIInfo api : failedAfterThreeRuns) {
+            if (!finalRetryHandler.getFailedAPIs().contains(api)) {
+                backToNormal.add(api);
+            } else {
+                stillFailing.add(api);
+            }
+        }
+
+       
+        if (!backToNormal.isEmpty()) {
+        	EmailSender.sendBackToNormalSuccess(backToNormal, allureReportUrl);
+        }
+
+        if (!stillFailing.isEmpty()) {
+            EmailSender.sendStillFailed(toApiInfoMaps(stillFailing), allureReportUrl); 
+    }
+    }
+    
+    private static APIInfo mapToApiInfo(Map<String, Object> map) {
+        return new APIInfo(
+            map.get("api").toString(),
+            map.get("endpoint").toString(),
+            map.getOrDefault("method", "GET").toString(),  // Default method fallback
+            map.getOrDefault("priority", "medium").toString(),
+            map.getOrDefault("payload", "").toString()
+        );
     }
 
     private static void trackFailuresFromResults(List<Map<String, Object>> results, RetryHandler retryHandler, List<APIInfo> apis) {
         retryHandler.clearFailures();
         for (Map<String, Object> result : results) {
             int statusCode = getStatusCode(result);
-            if (statusCode != 200) {
+            if (statusCode != HttpStatus.OK.code) {
                 APIInfo failedApi = findApiByName(apis, (String) result.get("api"));
                 if (failedApi != null) {
+                    failedApi.lastStatusCode = statusCode; // Track status code in APIInfo
                     retryHandler.trackFailure(failedApi);
                 }
             }
@@ -118,16 +163,20 @@ public class Main {
         result.put("method", api.method);
         result.put("auth_token", apiBase.getAuthToken());
         result.put("payload", api.payload != null ? api.payload : "");
+
+        int statusCode = getStatusCode(result);
+        api.lastStatusCode = statusCode; // Store status code for reporting
+
         return result;
     }
 
     @Step("Logging API status")
     public static void logStatus(APIInfo api, Map<String, Object> result) {
         int statusCode = getStatusCode(result);
-        if (statusCode == 200) {
-            System.out.println(" API succeeded: " + api.name);
+        if (statusCode == HttpStatus.OK.code) {
+            Logger.info(" API succeeded: " + api.name);
         } else {
-            System.out.println(" API failed: " + api.name + " (Status: " + statusCode + ")");
+            Logger.info(" API failed: " + api.name + " (Status: " + statusCode + ")");
         }
     }
 
@@ -139,7 +188,7 @@ public class Main {
             Map<String, Object> result = executeApi(apiBase, api);
             runResults.add(result);
             logStatus(api, result);
-            if (getStatusCode(result) != 200) {
+            if (getStatusCode(result) != HttpStatus.OK.code) {
                 retryHandler.trackFailure(api);
             }
         }
@@ -148,14 +197,17 @@ public class Main {
 
     @Step("Retrying Failed APIs")
     public static List<Map<String, Object>> retryFailedApis(APIBase apiBase, RetryHandler retryHandler) {
-        List<APIInfo> failedApis = new ArrayList<>(retryHandler.getFailedAPIs());
+        return retryFailedApis(apiBase, new ArrayList<>(retryHandler.getFailedAPIs()), retryHandler);
+    }
+
+    public static List<Map<String, Object>> retryFailedApis(APIBase apiBase, List<APIInfo> apisToRetry, RetryHandler retryHandler) {
         retryHandler.clearFailures();
         List<Map<String, Object>> retryResults = new ArrayList<>();
-        for (APIInfo api : failedApis) {
+        for (APIInfo api : apisToRetry) {
             Map<String, Object> result = executeApi(apiBase, api);
             retryResults.add(result);
             logStatus(api, result);
-            if (getStatusCode(result) != 200) {
+            if (getStatusCode(result) != HttpStatus.OK.code) {
                 retryHandler.trackFailure(api);
             }
         }
@@ -169,5 +221,31 @@ public class Main {
     private static int getStatusCode(Map<String, Object> result) {
         Object statusObj = result.get("status_code");
         return statusObj instanceof Integer ? (Integer) statusObj : -1;
+    }
+
+    // Converts List<APIInfo> to List<Map<String,Object>> suitable for EmailSender methods
+    private static List<Map<String, Object>> toApiInfoMaps(List<APIInfo> apiInfos) {
+        return apiInfos.stream().map(api -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("api", api.name);
+            map.put("endpoint", api.endpoint);
+            map.put("status_code", api.lastStatusCode != 0 ? api.lastStatusCode : -1);
+            return map;
+        }).collect(Collectors.toList());
+    }
+}
+
+class Logger {
+    public static void info(String message) {
+        System.out.println("[INFO] " + message);
+    }
+}
+
+enum HttpStatus {
+    OK(200);
+
+    public final int code;
+    HttpStatus(int code) {
+        this.code = code;
     }
 }

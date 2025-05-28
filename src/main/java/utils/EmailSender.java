@@ -6,60 +6,63 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
+import model.APIInfo;
 
 import javax.mail.*;
 import javax.mail.internet.*;
 import java.io.*;
 import java.nio.file.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+
 public class EmailSender {
 
-    public static void sendResultsEmail(List<Map<String, Object>> results, String subject, String allureReportUrl) {
-        final String username = "s.aburumman96@gmail.com";
-        final String password = "bstk tgcp lecf wzlb";
-        String to = "saraajoacademy@gmail.com";
+    private static final String FROM_EMAIL = "s.aburumman96@gmail.com";
+    private static final String PASSWORD = "bstk tgcp lecf wzlb";
+    private static final String TO_EMAIL = "saraajoacademy@gmail.com";
 
+    private static Session createSession() {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.port", "587");
 
-        Session session = Session.getInstance(props,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
-                    }
-                });
+        return Session.getInstance(props, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(FROM_EMAIL, PASSWORD);
+            }
+        });
+    }
+
+    public static void sendResultsEmail(List<Map<String, Object>> results, String subject, String allureReportUrl) {
+        Session session = createSession();
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(username));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            message.setFrom(new InternetAddress(FROM_EMAIL));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(TO_EMAIL));
             message.setSubject(subject);
 
             List<File> attachments = new ArrayList<>();
-
             StringBuilder emailBody = new StringBuilder();
             emailBody.append("<html><body style='font-family: Arial, sans-serif;'>");
             emailBody.append("<h2>Execution Results:</h2>");
 
-            // Add Allure report clickable link instead of ZIP attachment
             if (allureReportUrl != null && !allureReportUrl.isEmpty()) {
                 emailBody.append("<p><strong>Full Allure report: </strong>")
                          .append("<a href='").append(allureReportUrl).append("' target='_blank'>Click here to view the Allure report</a></p>");
             }
 
-            // Sort results by status_code descending
-            results.sort((map1, map2) -> {
-                int code1 = safeParseInt(map1.get("status_code"));
-                int code2 = safeParseInt(map2.get("status_code"));
-                return Integer.compare(code2, code1);
-            });
+            results.sort((map1, map2) -> Integer.compare(
+                    safeParseInt(map2.get("status_code")),
+                    safeParseInt(map1.get("status_code"))
+            ));
 
             appendStatusGroupToEmailBody(emailBody, results, 500, "#f28888", "Failed (5xx)", attachments);
             appendStatusGroupToEmailBody(emailBody, results, 400, "#f0cc97", "Failed (4xx)", attachments);
@@ -69,12 +72,10 @@ public class EmailSender {
             emailBody.append("</body></html>");
 
             Multipart multipart = new MimeMultipart();
-
             MimeBodyPart htmlPart = new MimeBodyPart();
             htmlPart.setContent(emailBody.toString(), "text/html; charset=UTF-8");
             multipart.addBodyPart(htmlPart);
 
-            // Attach generated PDFs
             for (File attachment : attachments) {
                 if (attachment != null && attachment.exists()) {
                     MimeBodyPart attachmentPart = new MimeBodyPart();
@@ -85,7 +86,6 @@ public class EmailSender {
 
             message.setContent(multipart);
             Transport.send(message);
-
             System.out.println("Email sent successfully.");
 
         } catch (Exception e) {
@@ -94,30 +94,23 @@ public class EmailSender {
     }
 
     private static int safeParseInt(Object obj) {
-        if (obj == null) return -1;
         try {
-            return Integer.parseInt(obj.toString());
+            return obj == null ? -1 : Integer.parseInt(obj.toString());
         } catch (NumberFormatException e) {
             return -1;
         }
     }
 
-    private static void appendStatusGroupToEmailBody(StringBuilder emailBody, List<Map<String, Object>> results, int statusCodeGroup, String color, String groupName, List<File> attachments) {
-        List<Map<String, Object>> filteredResults = getResultsByStatusCode(results, statusCodeGroup);
-
-        if (!filteredResults.isEmpty()) {
+    private static void appendStatusGroupToEmailBody(StringBuilder emailBody, List<Map<String, Object>> results,
+                                                     int statusCodeGroup, String color, String groupName, List<File> attachments) {
+        List<Map<String, Object>> filtered = getResultsByStatusCode(results, statusCodeGroup);
+        if (!filtered.isEmpty()) {
             emailBody.append("<h3 style='background-color: ").append(color).append("; padding: 5px;'>").append(groupName).append("</h3>");
-            emailBody.append("<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%; margin-left: auto; margin-right: auto;'>");
-            emailBody.append("<tr><th style='background-color: #f2f2f2;'>API Name</th>")
-                    .append("<th style='background-color: #f2f2f2;'>Endpoint</th>")
-                    .append("<th style='background-color: #f2f2f2;'>Status Code</th>")
-                    .append("<th style='background-color: #f2f2f2;'>Full Response</th>")
-                    .append("<th style='background-color: #f2f2f2;'>Request cURL</th></tr>");
-
-            for (Map<String, Object> result : filteredResults) {
+            emailBody.append("<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%;'>")
+                     .append("<tr><th>API Name</th><th>Endpoint</th><th>Status Code</th><th>Full Response</th><th>Request cURL</th></tr>");
+            for (Map<String, Object> result : filtered) {
                 appendApiDetailsToEmailBody(emailBody, result, attachments);
             }
-
             emailBody.append("</table>");
         }
     }
@@ -160,157 +153,130 @@ public class EmailSender {
 
     private static String decodeAndFormatFullResponse(String jsonResponse, String apiName, List<File> attachments) {
         try {
-            // Decode Unicode escape sequences if needed
             String decodedJson = decodeUnicode(jsonResponse);
-
-            // Parse JSON
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(decodedJson);
 
-            // Format JSON as key-value pairs (you need to have this method implemented)
             StringBuilder formatted = new StringBuilder();
-            formatted.append("<div style='font-family: monospace; font-size: 13px; white-space: pre-wrap; direction: ltr; text-align: left;'>");
+            formatted.append("<div style='font-family: monospace; font-size: 13px; white-space: pre-wrap;'>");
             formatJsonKeyValuePairs(root, formatted, "");
             formatted.append("</div>");
 
-            // Get preview - first N lines of the formatted HTML (you can adjust line count)
             String preview = getFirstNLines(formatted.toString(), 10);
-
-            // Generate PDF from full formatted HTML
             File pdf = generatePdf(apiName, formatted.toString());
             attachments.add(pdf);
-            String fileName = pdf.getName();
 
-            // Build email-safe HTML with preview and attachment info
-            StringBuilder emailHtml = new StringBuilder();
-            
-            emailHtml.append("<div style='margin-top: 6px; font-size: 12px; color: #388e3c;'>");
-            emailHtml.append("Scroll to view the full API response.");
-            emailHtml.append("</div>");
-
-            // Preview block with monospace style
-            emailHtml.append("<div style='font-family: monospace; font-size: 13px; white-space: pre-wrap; direction: ltr; text-align: left; border: 1px solid #ccc; padding: 8px; max-height: 180px; overflow: auto;'>");
-            emailHtml.append(preview);
-            emailHtml.append("</div>");
-
-            // Attachment info with icon and file name
-            emailHtml.append("<div style='margin-top: 12px; font-size: 14px;'>");
-            emailHtml.append("<span style='font-size:16px;'>📄</span> <strong>").append(fileName).append("</strong>");
-            emailHtml.append("</div>");
-
-           
-
-            return emailHtml.toString();
-
+            return "<div style='margin-top: 6px;'>Scroll to view the full API response.</div>" +
+                   "<div style='border: 1px solid #ccc; padding: 8px; max-height: 180px; overflow: auto;'>" + preview + "</div>" +
+                   "<div><strong>📄 " + pdf.getName() + "</strong></div>";
         } catch (Exception e) {
-        	   // Build email-safe HTML with preview and attachment info
-            StringBuilder emailHtmlFailed = new StringBuilder();
-
-            emailHtmlFailed.append("<div style='margin-top: 6px; font-size: 12px; color: #d32f2f;'>");
-            emailHtmlFailed.append("Scroll to view the full API response.");
-            emailHtmlFailed.append("</div>");
-
-            // Preview block with monospace style
-            emailHtmlFailed.append("<div style='font-family: monospace; font-size: 13px; white-space: pre-wrap; direction: ltr; text-align: left; border: 1px solid #ccc; padding: 8px; max-height: 180px; overflow: auto;'>");
-            emailHtmlFailed.append(jsonResponse);
-            emailHtmlFailed.append("</div>");
-
-        
-           
-
-            return emailHtmlFailed.toString();
-
-            
+            return "<div style='margin-top: 6px;'>Could not parse response</div><div>" + jsonResponse + "</div>";
         }
-    }
-
-    private static String getFirstNLines(String text, int maxLines) {
-        String[] lines = text.split("\n");
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < Math.min(maxLines, lines.length); i++) {
-            builder.append(lines[i]).append("\n");
-        }
-        return builder.toString().trim();
     }
 
     private static String decodeUnicode(String text) {
         Pattern pattern = Pattern.compile("\\\\u([0-9a-fA-F]{4})");
         Matcher matcher = pattern.matcher(text);
         StringBuffer decodedText = new StringBuffer();
-
         while (matcher.find()) {
-            String unicodeValue = matcher.group(1);
-            char decodedChar = (char) Integer.parseInt(unicodeValue, 16);
-            matcher.appendReplacement(decodedText, String.valueOf(decodedChar));
+            matcher.appendReplacement(decodedText, String.valueOf((char) Integer.parseInt(matcher.group(1), 16)));
         }
         matcher.appendTail(decodedText);
         return decodedText.toString();
     }
 
-    private static String generateCurlCommand(Map<String, Object> result) {
-        String baseUrl = (String) result.getOrDefault("base_url", "");
-        String endpoint = (String) result.getOrDefault("endpoint", "");
-        String authToken = (String) result.getOrDefault("auth_token", "");
-        String payload = (String) result.getOrDefault("payload", "");
-        String method = (String) result.getOrDefault("method", "GET");
-
-        StringBuilder curl = new StringBuilder();
-        curl.append("curl '").append(baseUrl).append(endpoint).append("' \\\n")
-            .append("-H 'Authorization: Bearer ").append(authToken).append("' \\\n")
-            .append("-H 'Content-Type: application/json' \\\n");
-
-        if (payload != null && !payload.isEmpty()) {
-            curl.append("-d '").append(payload).append("' \\\n");
-        }
-
-        curl.append("-X ").append(method);
-
-        return curl.toString();
-    }
-
-    private static void formatJsonKeyValuePairs(JsonNode node, StringBuilder formatted, String indent) {
+    private static void formatJsonKeyValuePairs(JsonNode node, StringBuilder builder, String indent) {
         if (node.isObject()) {
-            Iterator<String> fieldNames = node.fieldNames();
-            while (fieldNames.hasNext()) {
-                String key = fieldNames.next();
-                JsonNode value = node.get(key);
-                formatted.append(indent).append("<strong>").append(key).append("</strong>: ");
+            node.fields().forEachRemaining(field -> {
+                builder.append(indent).append(field.getKey()).append(": ");
+                JsonNode value = field.getValue();
                 if (value.isValueNode()) {
-                    formatted.append(value.asText()).append("<br>");
+                    builder.append(value.asText()).append("\n");
                 } else {
-                    formatted.append("<br>");
-                    formatJsonKeyValuePairs(value, formatted, indent + "&nbsp;&nbsp;&nbsp;&nbsp;");
+                    builder.append("\n");
+                    formatJsonKeyValuePairs(value, builder, indent + "  ");
                 }
-            }
+            });
         } else if (node.isArray()) {
-            int i = 0;
-            for (JsonNode element : node) {
-                formatted.append(indent).append("[").append(i).append("]: <br>");
-                formatJsonKeyValuePairs(element, formatted, indent + "&nbsp;&nbsp;&nbsp;&nbsp;");
-                i++;
+            int index = 0;
+            for (JsonNode item : node) {
+                builder.append(indent).append("[").append(index++).append("]:\n");
+                formatJsonKeyValuePairs(item, builder, indent + "  ");
             }
         } else {
-            formatted.append(indent).append(node.asText()).append("<br>");
+            builder.append(indent).append(node.asText()).append("\n");
         }
     }
 
-    private static File generatePdf(String apiName, String content) {
-        try {
-            String safeName = apiName.replaceAll("[^a-zA-Z0-9\\-_\\.]", "_");
-            Path pdfPath = Paths.get("target/reports/" + safeName + "_fullResponse.pdf");
-            Files.createDirectories(pdfPath.getParent());
+    private static String getFirstNLines(String text, int maxLines) {
+        String[] lines = text.split("\n");
+        return Arrays.stream(lines).limit(maxLines).collect(Collectors.joining("\n"));
+    }
 
-            PdfWriter writer = new PdfWriter(pdfPath.toString());
-            PdfDocument pdfDoc = new PdfDocument(writer);
-            Document document = new Document(pdfDoc);
-            // Add content as plain text; you can customize styling here if needed
-            document.add(new Paragraph(content.replaceAll("<br>", "\n").replaceAll("&nbsp;", " ")));
-            document.close();
+    private static File generatePdf(String fileName, String content) throws IOException {
+        String safeFileName = fileName.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+        Path tempDir = Files.createTempDirectory("pdf_attachments");
+        File pdfFile = new File(tempDir.toFile(), safeFileName + ".pdf");
 
-            return pdfPath.toFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        try (PdfWriter writer = new PdfWriter(pdfFile);
+             PdfDocument pdfDoc = new PdfDocument(writer);
+             Document document = new Document(pdfDoc)) {
+            document.add(new Paragraph(content));
         }
+
+        return pdfFile;
+    }
+
+    private static String generateCurlCommand(Map<String, Object> result) {
+        StringBuilder curl = new StringBuilder("curl -X ");
+        curl.append(result.getOrDefault("method", "GET")).append(" '")
+            .append(result.getOrDefault("base_url", "")).append(result.getOrDefault("endpoint", "")).append("' ");
+        if (result.containsKey("auth_token")) {
+            curl.append("-H 'Authorization: Bearer ").append(result.get("auth_token")).append("' ");
+        }
+        if (result.containsKey("payload")) {
+            curl.append("-d '").append(result.get("payload")).append("' ");
+        }
+        return curl.toString().trim();
+    }
+
+    public static void sendFailureEmail(List<Map<String, Object>> results, String allureReportUrl) {
+        sendResultsEmail(results, "Alert: API Failure Report", allureReportUrl);
+    }
+
+    public static void sendStillFailed(List<Map<String, Object>> results, String allureReportUrl) {
+        sendResultsEmail(results, "Alert: APIs Still Failing", allureReportUrl);
+    }
+
+    public static void sendBackToNormalSuccess(List<APIInfo> recoveredAPIs, String subject) {
+        try {
+            Message message = new MimeMessage(createSession());
+            message.setFrom(new InternetAddress(FROM_EMAIL));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(TO_EMAIL));
+            message.setSubject(subject);
+
+            StringBuilder htmlBody = new StringBuilder();
+            htmlBody.append("<html><body style='font-family: Arial, sans-serif;'>");
+            htmlBody.append("<h3>✅ Recovered APIs</h3><ul>");
+            for (APIInfo api : recoveredAPIs) {
+                String duration = formatDuration(api.getFirstFailureTime(), api.getRecoveryTime());
+                htmlBody.append(String.format(
+                        "<li><b>%s</b> (%s) - Recovery Duration: <i>%s</i></li>",
+                        api.getName(), api.getEndpoint(), duration));
+            }
+            htmlBody.append("</ul></body></html>");
+
+            message.setContent(htmlBody.toString(), "text/html; charset=UTF-8");
+            Transport.send(message);
+            System.out.println("Recovery email sent successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String formatDuration(Instant start, Instant end) {
+        if (start == null || end == null) return "N/A";
+        Duration duration = Duration.between(start, end);
+        return String.format("%d min, %d sec", duration.toMinutes(), duration.getSeconds() % 60);
     }
 }

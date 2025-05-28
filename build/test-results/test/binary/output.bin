@@ -1,27 +1,28 @@
 API scenario started
-$Initializing API test execution...
++[INFO] Initializing API test execution...
 $Loading YAML file: priorities.yaml
 YAML loaded successfully.
-Environment: staging
-'Base URL: https://admin.joacademy.net
-%Attempting to acquire auth token...
-CExtracted Token: 4533252|V108QRVUvv1IDFlfopKHs5UPBc3UnZafCubckNHF
-GAuth token acquired: 4533252|V108QRVUvv1IDFlfopKHs5UPBc3UnZafCubckNHF
-'Running group: courses, APIs count: 1
-" API succeeded: Get User Courses
+[INFO] Environment: staging
+.[INFO] Base URL: https://admin.joacademy.net
+-[INFO] Loaded group: courses, APIs count: 1
+,[INFO] Attempting to acquire auth token...
+CExtracted Token: 4556478|wgDzk2LRLBCLhkwsetBbAi26qNpmljiKTYspQN5x
+N[INFO] Auth token acquired: 4556478|wgDzk2LRLBCLhkwsetBbAi26qNpmljiKTYspQN5x
+)[INFO]  API succeeded: Get User Courses
 API scenario started
-$Initializing API test execution...
++[INFO] Initializing API test execution...
 $Loading YAML file: priorities.yaml
 YAML loaded successfully.
-Environment: staging
-'Base URL: https://admin.joacademy.net
-%Attempting to acquire auth token...
-CExtracted Token: 4533257|2lpxJkxbvVywv9eRdCzpI7AHlcx0vaFoLs6ZWls0
-GAuth token acquired: 4533257|2lpxJkxbvVywv9eRdCzpI7AHlcx0vaFoLs6ZWls0
-%Running group: files, APIs count: 1
-6 API failed: Get Favorite Files - Fail (Status: 404)
-&Starting Retry #1 for failed APIs...
-6 API failed: Get Favorite Files - Fail (Status: 404)
-&Starting Retry #2 for failed APIs...
-6 API failed: Get Favorite Files - Fail (Status: 404)
-8API FAILED: Get Favorite Files - Fail with status: 404
+[INFO] Environment: staging
+.[INFO] Base URL: https://admin.joacademy.net
++[INFO] Loaded group: files, APIs count: 1
+,[INFO] Attempting to acquire auth token...
+CExtracted Token: 4556479|FtkijKVuKcflJCK9Wy0DvKNQHcbJJHmxpJPx7ack
+N[INFO] Auth token acquired: 4556479|FtkijKVuKcflJCK9Wy0DvKNQHcbJJHmxpJPx7ack
+=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
+-[INFO] Starting Retry #1 for failed APIs...
+=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
+-[INFO] Starting Retry #2 for failed APIs...
+=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
+Email sent successfully.
+1[INFO] Waiting 10 minutes before final retry...

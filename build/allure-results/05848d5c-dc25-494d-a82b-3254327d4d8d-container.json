@@ -1,1 +1,0 @@
-{"uuid":"05848d5c-dc25-494d-a82b-3254327d4d8d","name":"APITestSuite","children":["0f5f6c35-bc3f-4556-a671-29a2af59d5fc"],"befores":[],"afters":[{"name":"sendFinalReport","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1748082336127,"stop":1748082339815}],"start":1748082321965,"stop":1748082339816}
