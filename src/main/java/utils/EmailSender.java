@@ -19,7 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
 public class EmailSender {
 
     private static final String FROM_EMAIL = "s.aburumman96@gmail.com";

@@ -7,7 +7,7 @@
         <classes>
             <class name="tests.ApiTest"/>
             <class name="tests.FailedTest"/>
-            <class name="tests.Finalizer"/> <!-- ✅ Add this line -->
+            <class name="tests.Finalizer"/>
         </classes>
     </test>
 </suite>

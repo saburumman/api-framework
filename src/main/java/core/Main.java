@@ -3,7 +3,6 @@ package core;
 import config.PrioritiesReader;
 import model.APIInfo;
 import utils.EmailSender;
-
 import io.qameta.allure.Step;
 
 import java.util.*;
@@ -42,20 +41,19 @@ public class Main {
         RetryHandler retryHandler = new RetryHandler();
         Map<String, Map<String, Object>> latestResultsMap = runScenarioWithRetries(apiBase, reader.apis, retryHandler);
 
+        // Do not send email here, just track failures
         List<APIInfo> failedAfterThreeRuns = new ArrayList<>(retryHandler.getFailedAPIs());
-        if (!failedAfterThreeRuns.isEmpty()) {
-            List<Map<String, Object>> failedApiMaps = toApiInfoMaps(failedAfterThreeRuns);
-            EmailSender.sendFailureEmail(failedApiMaps, allureReportUrl);
-            handleFinalRetry(apiBase, failedAfterThreeRuns);
-        }
 
+        // Convert map values to list and store in result holder
         List<Map<String, Object>> finalResults = new ArrayList<>(latestResultsMap.values());
         TestResultHolder.addResults(finalResults);
+
         return finalResults;
     }
 
     private static APIBase initializeApiContext(PrioritiesReader reader) {
         APIBase apiBase = new APIBase(reader.baseUrl);
+
         if (reader.loginApi != null) {
             Logger.info("Attempting to acquire auth token...");
             AuthHandler authHandler = new AuthHandler(apiBase);
@@ -70,6 +68,25 @@ public class Main {
         } else {
             Logger.info("No login API configured.");
         }
+
+        return apiBase;
+    }
+
+    public static APIBase initializeApiContextFromLatest() {
+        PrioritiesReader reader = new PrioritiesReader();
+        reader.load("priorities.yaml");
+
+        APIBase apiBase = new APIBase(reader.baseUrl);
+
+        if (reader.loginApi != null) {
+            Logger.info("Re-acquiring token for final retry...");
+            AuthHandler authHandler = new AuthHandler(apiBase);
+            String token = acquireToken(authHandler, reader.loginApi);
+            if (token != null) {
+                apiBase.setAuthToken(token);
+            }
+        }
+
         return apiBase;
     }
 
@@ -93,48 +110,6 @@ public class Main {
         return resultsMap;
     }
 
-    private static void handleFinalRetry(APIBase apiBase, List<APIInfo> failedAfterThreeRuns) {
-
-        try {
-            Logger.info("Waiting 10 minutes before final retry...");
-            Thread.sleep(600_000);
-        } catch (InterruptedException e) {
-            Logger.info("Wait interrupted: " + e.getMessage());
-        }
-
-        RetryHandler finalRetryHandler = new RetryHandler();
-        List<Map<String, Object>> finalRetryResults = retryFailedApis(apiBase, failedAfterThreeRuns, finalRetryHandler);
-
-        List<APIInfo> backToNormal = new ArrayList<>();
-        List<APIInfo> stillFailing = new ArrayList<>();
-        for (APIInfo api : failedAfterThreeRuns) {
-            if (!finalRetryHandler.getFailedAPIs().contains(api)) {
-                backToNormal.add(api);
-            } else {
-                stillFailing.add(api);
-            }
-        }
-
-       
-        if (!backToNormal.isEmpty()) {
-        	EmailSender.sendBackToNormalSuccess(backToNormal, allureReportUrl);
-        }
-
-        if (!stillFailing.isEmpty()) {
-            EmailSender.sendStillFailed(toApiInfoMaps(stillFailing), allureReportUrl); 
-    }
-    }
-    
-    private static APIInfo mapToApiInfo(Map<String, Object> map) {
-        return new APIInfo(
-            map.get("api").toString(),
-            map.get("endpoint").toString(),
-            map.getOrDefault("method", "GET").toString(),  // Default method fallback
-            map.getOrDefault("priority", "medium").toString(),
-            map.getOrDefault("payload", "").toString()
-        );
-    }
-
     private static void trackFailuresFromResults(List<Map<String, Object>> results, RetryHandler retryHandler, List<APIInfo> apis) {
         retryHandler.clearFailures();
         for (Map<String, Object> result : results) {
@@ -142,7 +117,7 @@ public class Main {
             if (statusCode != HttpStatus.OK.code) {
                 APIInfo failedApi = findApiByName(apis, (String) result.get("api"));
                 if (failedApi != null) {
-                    failedApi.lastStatusCode = statusCode; // Track status code in APIInfo
+                    failedApi.lastStatusCode = statusCode;
                     retryHandler.trackFailure(failedApi);
                 }
             }
@@ -165,7 +140,7 @@ public class Main {
         result.put("payload", api.payload != null ? api.payload : "");
 
         int statusCode = getStatusCode(result);
-        api.lastStatusCode = statusCode; // Store status code for reporting
+        api.lastStatusCode = statusCode;
 
         return result;
     }
@@ -223,8 +198,7 @@ public class Main {
         return statusObj instanceof Integer ? (Integer) statusObj : -1;
     }
 
-    // Converts List<APIInfo> to List<Map<String,Object>> suitable for EmailSender methods
-    private static List<Map<String, Object>> toApiInfoMaps(List<APIInfo> apiInfos) {
+    public static List<Map<String, Object>> toApiInfoMaps(List<APIInfo> apiInfos) {
         return apiInfos.stream().map(api -> {
             Map<String, Object> map = new HashMap<>();
             map.put("api", api.name);
@@ -232,6 +206,16 @@ public class Main {
             map.put("status_code", api.lastStatusCode != 0 ? api.lastStatusCode : -1);
             return map;
         }).collect(Collectors.toList());
+    }
+    
+    public static APIInfo mapToApiInfo(Map<String, Object> map) {
+        return new APIInfo(
+            map.get("api").toString(),
+            map.get("endpoint").toString(),
+            map.getOrDefault("method", "GET").toString(),
+            map.getOrDefault("priority", "medium").toString(),
+            map.getOrDefault("payload", "").toString()
+        );
     }
 }
 

@@ -40,7 +40,7 @@ public class PrioritiesReader {
                 );
             }
 
-            // Load grouped APIs from top-level "groups" key
+            // Load grouped APIs
             if (obj.containsKey("groups")) {
                 Map<String, List<Map<String, Object>>> groupMap = (Map<String, List<Map<String, Object>>>) obj.get("groups");
                 for (Map.Entry<String, List<Map<String, Object>>> entry : groupMap.entrySet()) {
@@ -59,7 +59,7 @@ public class PrioritiesReader {
                 }
             }
 
-            // Load top-level flat list of APIs if exists
+            // Load flat list of APIs
             if (obj.containsKey("apis")) {
                 List<Map<String, Object>> apiList = (List<Map<String, Object>>) obj.get("apis");
                 for (Map<String, Object> api : apiList) {
@@ -67,7 +67,7 @@ public class PrioritiesReader {
                             api.get("name").toString(),
                             api.get("endpoint").toString(),
                             api.get("method").toString(),
-                            api.get("priority").toString(),
+                            api.getOrDefault("priority", "medium").toString(),
                             api.get("payload") != null ? api.get("payload").toString() : null
                     ));
                 }

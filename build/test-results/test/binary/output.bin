@@ -6,8 +6,8 @@
 .[INFO] Base URL: https://admin.joacademy.net
 -[INFO] Loaded group: courses, APIs count: 1
 ,[INFO] Attempting to acquire auth token...
-CExtracted Token: 4556478|wgDzk2LRLBCLhkwsetBbAi26qNpmljiKTYspQN5x
-N[INFO] Auth token acquired: 4556478|wgDzk2LRLBCLhkwsetBbAi26qNpmljiKTYspQN5x
+CExtracted Token: 4558185|kCkUqOBghbuc4gLgd6eQRQHTWTogCjGGy0uadx7f
+N[INFO] Auth token acquired: 4558185|kCkUqOBghbuc4gLgd6eQRQHTWTogCjGGy0uadx7f
 )[INFO]  API succeeded: Get User Courses
 API scenario started
 +[INFO] Initializing API test execution...
@@ -17,12 +17,3 @@
 .[INFO] Base URL: https://admin.joacademy.net
 +[INFO] Loaded group: files, APIs count: 1
 ,[INFO] Attempting to acquire auth token...
-CExtracted Token: 4556479|FtkijKVuKcflJCK9Wy0DvKNQHcbJJHmxpJPx7ack
-N[INFO] Auth token acquired: 4556479|FtkijKVuKcflJCK9Wy0DvKNQHcbJJHmxpJPx7ack
-=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
--[INFO] Starting Retry #1 for failed APIs...
-=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
--[INFO] Starting Retry #2 for failed APIs...
-=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
-Email sent successfully.
-1[INFO] Waiting 10 minutes before final retry...
