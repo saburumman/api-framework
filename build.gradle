@@ -47,27 +47,15 @@ publishing {
     }
 }
 
-
-// 🟢 Separate test taskstasks.register('mainTests', Test) {
-tasks.register('mainTests', Test) {
+// Correct test task configuration
+test {
     useTestNG {
-        suites 'src/test/resources/testng.xml'
+        suites 'src/test/resources/testng.xml', 'src/test/resources/BackToNormalTry.xml'
     }
-    systemProperty 'allure.results.directory', "$buildDir/allure-results"
-    ignoreFailures = true
-    outputs.upToDateWhen { false } // Always run
-}
 
-tasks.register('retryTests', Test) {
-    useTestNG {
-        suites 'src/test/resources/BackToNormalTry.xml'
-    }
+    // Required to enable Allure output directory
     systemProperty 'allure.results.directory', "$buildDir/allure-results"
+    
+     // Continue build even if tests fail (so report can be generated)
     ignoreFailures = true
-    outputs.upToDateWhen { false } // Always run
-    mustRunAfter 'mainTests'       // Ensure it runs after mainTests
-}
-
-tasks.register('fullTest') {
-    dependsOn 'mainTests', 'retryTests'
 }
