@@ -9,59 +9,59 @@ import model.APIInfo;
 import utils.EmailSender;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
+import java.util.concurrent.TimeUnit;
 
 public class BackToNormalTry {
-	
-	 public static String allureReportUrl = "https://saburumman.github.io/api-framework/index.html";
 
-	    public static void main(String[] args) {
-	        try {
-	            System.out.println("⏳ Waiting 10 minutes before final retry...");
-	            Thread.sleep(600_000); // 10 minutes
+    public static String allureReportUrl = "https://saburumman.github.io/api-framework/index.html";
 
-	            List<Map<String, Object>> failedResults = TestResultHolder.getAllResults().stream()
-	                .filter(res -> {
-	                    Object code = res.get("status_code");
-	                    return !(code instanceof Integer) || (Integer) code != 200;
-	                })
-	                .collect(Collectors.toList());
+    public static void main(String[] args) {
+        try {
+            System.out.println("Waiting 10 minutes before re-trying failed APIs...");
+            TimeUnit.MINUTES.sleep(10);
 
-	            if (failedResults.isEmpty()) {
-	                System.out.println("✅ No failed APIs to retry.");
-	                return;
-	            }
+            List<APIInfo> failedApis = TestResultHolder.getFailedAPIInfos();
+            if (failedApis == null || failedApis.isEmpty()) {
+                System.out.println("No failed APIs to re-try. Skipping post-retry suite.");
+                return;
+            }
 
-	            List<APIInfo> failedApis = failedResults.stream()
-	                .map(Main::mapToApiInfo)
-	                .collect(Collectors.toList());
+            APIBase apiBase = Main.initializeApiContextFromLatest();
+            RetryHandler retryHandler = new RetryHandler();
 
-	            APIBase apiBase = Main.initializeApiContextFromLatest(); // You’ll define this
-	            RetryHandler finalRetryHandler = new RetryHandler();
-	            List<Map<String, Object>> retryResults = Main.retryFailedApis(apiBase, failedApis, finalRetryHandler);
+            System.out.println("Re-running failed APIs after wait...");
+            List<Map<String, Object>> retryResults = Main.retryFailedApis(apiBase, failedApis, retryHandler);
 
-	            List<APIInfo> backToNormal = new ArrayList<>();
-	            List<APIInfo> stillFailing = new ArrayList<>();
+            // 💡 Categorize the retry outcome
+            List<APIInfo> recovered = new ArrayList<>();
+            List<APIInfo> stillFailing = new ArrayList<>();
 
-	            for (APIInfo api : failedApis) {
-	                if (!finalRetryHandler.getFailedAPIs().contains(api)) {
-	                    backToNormal.add(api);
-	                } else {
-	                    stillFailing.add(api);
-	                }
-	            }
+            for (APIInfo api : failedApis) {
+                if (api.getLastStatusCode() == 200) {
+                    api.setRecoveryTime(java.time.Instant.now());
+                    recovered.add(api);
+                } else {
+                    stillFailing.add(api);
+                }
+            }
 
-	            if (!backToNormal.isEmpty()) {
-	                EmailSender.sendBackToNormalSuccess(backToNormal, allureReportUrl);
-	            }
+            // 📨 Decide email subject based on results
+            String emailSubject;
+            if (stillFailing.isEmpty() && !recovered.isEmpty()) {
+                emailSubject = "All APIs Back to Normal After Retry";
+            } else if (!stillFailing.isEmpty() && recovered.isEmpty()) {
+                emailSubject = "APIs Still Failing After Retry";
+            } else if (!stillFailing.isEmpty() && !recovered.isEmpty()) {
+                emailSubject = "Some APIs Recovered, Some Still Failing After Retry";
+            } else {
+                emailSubject = "No API Failures Detected"; // edge case
+            }
 
-	            if (!stillFailing.isEmpty()) {
-	                EmailSender.sendStillFailed(Main.toApiInfoMaps(stillFailing), allureReportUrl);
-	            }
+            EmailSender.sendResultsEmail(retryResults, emailSubject, Main.allureReportUrl);
 
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }
-	    }
-	}
+        } catch (Exception e) {
+            System.err.println("Exception during post-retry processing:");
+            e.printStackTrace();
+        }
+    }
+}

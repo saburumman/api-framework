@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="tests.ApiTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-05-31T14:34:58" hostname="AMLQASRQA4204" time="3.682">
+  <properties/>
+  <testcase name="executeApiFlow" classname="tests.ApiTest" time="3.682"/>
+  <system-out><![CDATA[API scenario started
+[INFO] Initializing API test execution...
+Loading YAML file: priorities.yaml
+YAML loaded successfully.
+[INFO] Environment: staging
+[INFO] Base URL: https://admin.joacademy.net
+[INFO] Loaded group: courses, APIs count: 1
+[INFO] Attempting to acquire auth token...
+Extracted Token: 4572098|py4ebxXExBGxNuHeuFLHutQ3VkRTuiOH23eCqjeY
+[INFO] Auth token acquired: 4572098|py4ebxXExBGxNuHeuFLHutQ3VkRTuiOH23eCqjeY
+[INFO]  API succeeded: Get User Courses
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

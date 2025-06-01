@@ -75,6 +75,7 @@ public class EmailSender {
             htmlPart.setContent(emailBody.toString(), "text/html; charset=UTF-8");
             multipart.addBodyPart(htmlPart);
 
+            // Attach generated PDFs
             for (File attachment : attachments) {
                 if (attachment != null && attachment.exists()) {
                     MimeBodyPart attachmentPart = new MimeBodyPart();
@@ -93,8 +94,9 @@ public class EmailSender {
     }
 
     private static int safeParseInt(Object obj) {
+        if (obj == null) return -1;
         try {
-            return obj == null ? -1 : Integer.parseInt(obj.toString());
+            return Integer.parseInt(obj.toString());
         } catch (NumberFormatException e) {
             return -1;
         }
@@ -164,12 +166,44 @@ public class EmailSender {
             String preview = getFirstNLines(formatted.toString(), 10);
             File pdf = generatePdf(apiName, formatted.toString());
             attachments.add(pdf);
+            String fileName = pdf.getName();
 
-            return "<div style='margin-top: 6px;'>Scroll to view the full API response.</div>" +
-                   "<div style='border: 1px solid #ccc; padding: 8px; max-height: 180px; overflow: auto;'>" + preview + "</div>" +
-                   "<div><strong>📄 " + pdf.getName() + "</strong></div>";
+            // Build email-safe HTML with preview and attachment info
+            StringBuilder emailHtml = new StringBuilder();
+
+            emailHtml.append("<div style='margin-top: 6px; font-size: 12px; color: #388e3c;'>");
+            emailHtml.append("Scroll to view the full API response.");
+            emailHtml.append("</div>");
+
+            // Preview block with monospace style
+            emailHtml.append("<div style='font-family: monospace; font-size: 13px; white-space: pre-wrap; direction: ltr; text-align: left; border: 1px solid #ccc; padding: 8px; max-height: 180px; overflow: auto;'>");
+            emailHtml.append(preview);
+            emailHtml.append("</div>");
+
+            // Attachment info with icon and file name
+            emailHtml.append("<div style='margin-top: 12px; font-size: 14px;'>");
+            emailHtml.append("<span style='font-size:16px;'>📄</span> <strong>").append(fileName).append("</strong>");
+            emailHtml.append("</div>");
+
+           
+
+            return emailHtml.toString();
+            
         } catch (Exception e) {
-            return "<div style='margin-top: 6px;'>Could not parse response</div><div>" + jsonResponse + "</div>";
+        	   // Build email-safe HTML with preview and attachment info
+            StringBuilder emailHtmlFailed = new StringBuilder();
+
+            emailHtmlFailed.append("<div style='margin-top: 6px; font-size: 12px; color: #d32f2f;'>");
+            emailHtmlFailed.append("Scroll to view the full API response.");
+            emailHtmlFailed.append("</div>");
+
+            // Preview block with monospace style
+            emailHtmlFailed.append("<div style='font-family: monospace; font-size: 13px; white-space: pre-wrap; direction: ltr; text-align: left; border: 1px solid #ccc; padding: 8px; max-height: 180px; overflow: auto;'>");
+            emailHtmlFailed.append(jsonResponse);
+            emailHtmlFailed.append("</div>");
+            
+            return emailHtmlFailed.toString();
+
         }
     }
 
@@ -177,39 +211,49 @@ public class EmailSender {
         Pattern pattern = Pattern.compile("\\\\u([0-9a-fA-F]{4})");
         Matcher matcher = pattern.matcher(text);
         StringBuffer decodedText = new StringBuffer();
+
         while (matcher.find()) {
-            matcher.appendReplacement(decodedText, String.valueOf((char) Integer.parseInt(matcher.group(1), 16)));
+            String unicodeValue = matcher.group(1);
+            char decodedChar = (char) Integer.parseInt(unicodeValue, 16);
+            matcher.appendReplacement(decodedText, String.valueOf(decodedChar));
         }
         matcher.appendTail(decodedText);
         return decodedText.toString();
     }
 
     private static void formatJsonKeyValuePairs(JsonNode node, StringBuilder builder, String indent) {
-        if (node.isObject()) {
-            node.fields().forEachRemaining(field -> {
-                builder.append(indent).append(field.getKey()).append(": ");
-                JsonNode value = field.getValue();
-                if (value.isValueNode()) {
-                    builder.append(value.asText()).append("\n");
-                } else {
-                    builder.append("\n");
-                    formatJsonKeyValuePairs(value, builder, indent + "  ");
-                }
-            });
-        } else if (node.isArray()) {
-            int index = 0;
-            for (JsonNode item : node) {
-                builder.append(indent).append("[").append(index++).append("]:\n");
-                formatJsonKeyValuePairs(item, builder, indent + "  ");
-            }
-        } else {
-            builder.append(indent).append(node.asText()).append("\n");
-        }
+    	  if (node.isObject()) {
+              Iterator<String> fieldNames = node.fieldNames();
+              while (fieldNames.hasNext()) {
+                  String key = fieldNames.next();
+                  JsonNode value = node.get(key);
+                  builder.append(indent).append("<strong>").append(key).append("</strong>: ");
+                  if (value.isValueNode()) {
+                	  builder.append(value.asText()).append("<br>");
+                  } else {
+                	  builder.append("<br>");
+                      formatJsonKeyValuePairs(value, builder, indent + "&nbsp;&nbsp;&nbsp;&nbsp;");
+                  }
+              }
+          } else if (node.isArray()) {
+              int i = 0;
+              for (JsonNode element : node) {
+            	  builder.append(indent).append("[").append(i).append("]: <br>");
+                  formatJsonKeyValuePairs(element, builder, indent + "&nbsp;&nbsp;&nbsp;&nbsp;");
+                  i++;
+              }
+          } else {
+        	  builder.append(indent).append(node.asText()).append("<br>");
+          }
     }
 
     private static String getFirstNLines(String text, int maxLines) {
         String[] lines = text.split("\n");
-        return Arrays.stream(lines).limit(maxLines).collect(Collectors.joining("\n"));
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < Math.min(maxLines, lines.length); i++) {
+            builder.append(lines[i]).append("\n");
+        }
+        return builder.toString().trim();
     }
 
     private static File generatePdf(String fileName, String content) throws IOException {
@@ -227,17 +271,26 @@ public class EmailSender {
     }
 
     private static String generateCurlCommand(Map<String, Object> result) {
-        StringBuilder curl = new StringBuilder("curl -X ");
-        curl.append(result.getOrDefault("method", "GET")).append(" '")
-            .append(result.getOrDefault("base_url", "")).append(result.getOrDefault("endpoint", "")).append("' ");
-        if (result.containsKey("auth_token")) {
-            curl.append("-H 'Authorization: Bearer ").append(result.get("auth_token")).append("' ");
+        String baseUrl = (String) result.getOrDefault("base_url", "");
+        String endpoint = (String) result.getOrDefault("endpoint", "");
+        String authToken = (String) result.getOrDefault("auth_token", "");
+        String payload = (String) result.getOrDefault("payload", "");
+        String method = (String) result.getOrDefault("method", "GET");
+
+        StringBuilder curl = new StringBuilder();
+        curl.append("curl '").append(baseUrl).append(endpoint).append("' \\\n")
+            .append("-H 'Authorization: Bearer ").append(authToken).append("' \\\n")
+            .append("-H 'Content-Type: application/json' \\\n");
+
+        if (payload != null && !payload.isEmpty()) {
+            curl.append("-d '").append(payload).append("' \\\n");
         }
-        if (result.containsKey("payload")) {
-            curl.append("-d '").append(result.get("payload")).append("' ");
-        }
-        return curl.toString().trim();
+
+        curl.append("-X ").append(method);
+
+        return curl.toString();
     }
+
 
     public static void sendFailureEmail(List<Map<String, Object>> results, String allureReportUrl) {
         sendResultsEmail(results, "Alert: API Failure Report", allureReportUrl);
@@ -256,7 +309,7 @@ public class EmailSender {
 
             StringBuilder htmlBody = new StringBuilder();
             htmlBody.append("<html><body style='font-family: Arial, sans-serif;'>");
-            htmlBody.append("<h3>✅ Recovered APIs</h3><ul>");
+            htmlBody.append("<h3>Recovered APIs</h3><ul>");
             for (APIInfo api : recoveredAPIs) {
                 String duration = formatDuration(api.getFirstFailureTime(), api.getRecoveryTime());
                 htmlBody.append(String.format(

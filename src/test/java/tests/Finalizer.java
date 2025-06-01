@@ -12,20 +12,19 @@ public class Finalizer {
     @AfterSuite
     public void sendFinalReport() {
         try {
-            List<Map<String, Object>> allResults = TestResultHolder.getAllResults();
+            List<Map<String, Object>> failedResults = TestResultHolder.getFailedResults();
 
-            if (allResults != null && !allResults.isEmpty()) {
-                // Allow override via system property if needed
+            if (failedResults != null && !failedResults.isEmpty()) {
                 String allureReportUrl = System.getProperty("allure.report.url", "https://saburumman.github.io/api-framework/");
 
-                System.out.println("📩 Sending final email report with " + allResults.size() + " API results.");
-                EmailSender.sendResultsEmail(allResults, "Final API Test Summary + Allure Report", allureReportUrl);
-                System.out.println("✅ Final email report sent successfully.");
+                System.out.println("Sending final email report with " + failedResults.size() + " failed API results.");
+                EmailSender.sendResultsEmail(failedResults, "Failed API Summary + Allure Report", allureReportUrl);
+                System.out.println("Final email report sent successfully.");
             } else {
-                System.out.println("⚠️ No API test results collected. Email not sent.");
+                System.out.println("All APIs passed. No failed results to email.");
             }
         } catch (Exception e) {
-            System.err.println("❌ Exception during final report email sending:");
+            System.err.println("Exception during final report email sending:");
             e.printStackTrace();
         }
     }
