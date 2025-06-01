@@ -48,14 +48,27 @@ publishing {
 }
 
 // Correct test task configuration
-test {
-    useTestNG {
-        suites 'src/test/resources/testng.xml', 'src/test/resources/BackToNormalTry.xml'
-    }
+def allureResultsDir = "$buildDir/allure-results"
 
-    // Required to enable Allure output directory
-    systemProperty 'allure.results.directory', "$buildDir/allure-results"
-    
-     // Continue build even if tests fail (so report can be generated)
+tasks.register('mainTests', Test) {
+    useTestNG {
+        suites 'src/test/resources/testng.xml'
+    }
+    systemProperty 'allure.results.directory', allureResultsDir
     ignoreFailures = true
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('retryTests', Test) {
+    useTestNG {
+        suites 'src/test/resources/BackToNormalTry.xml'
+    }
+    systemProperty 'allure.results.directory', allureResultsDir
+    ignoreFailures = true
+    outputs.upToDateWhen { false }
+    mustRunAfter 'mainTests'
+}
+
+tasks.register('fullTest') {
+    dependsOn 'mainTests', 'retryTests'
 }

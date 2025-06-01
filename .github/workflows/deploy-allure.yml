@@ -33,7 +33,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Tests with Allure Results Directory Property
-        run: ./gradlew clean test -Dallure.results.directory=build/allure-results
+        run: ./gradlew clean fullTest -Dallure.results.directory=build/allure-results
 
       - name: List Allure results files to verify generation
         run: ls -la build/allure-results
