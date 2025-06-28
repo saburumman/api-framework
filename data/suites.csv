@@ -1,3 +1,3 @@
 "DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","3985","Run Full API Scenario with Allure Steps","APITestSuite","Sat Jun 28 11:59:03 UTC 2025","passed","Sat Jun 28 11:59:07 UTC 2025","tests.ApiTest","RunAPI","tests.ApiTest","executeApiFlow"
-"","4470","Run Failed API's","APITestSuite","Sat Jun 28 11:59:07 UTC 2025","failed","Sat Jun 28 11:59:12 UTC 2025","tests.FailedTest","RunAPI","tests.FailedTest","executeApiFlow"
+"","4331","Run Failed API's","APITestSuite","Sat Jun 28 12:02:53 UTC 2025","failed","Sat Jun 28 12:02:57 UTC 2025","tests.FailedTest","RunAPI","tests.FailedTest","executeApiFlow"
+"","4274","Run Full API Scenario with Allure Steps","APITestSuite","Sat Jun 28 12:02:48 UTC 2025","passed","Sat Jun 28 12:02:53 UTC 2025","tests.ApiTest","RunAPI","tests.ApiTest","executeApiFlow"
