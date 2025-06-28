@@ -17,6 +17,6 @@ groups:
 
   files:
     - name: "Get Favorite Files - Fail"
-      endpoint: "/api/v1/get-favorite-fil?page=1"
+      endpoint: "/api/v1/get-favorite-file?page=1"
       method: "POST"
       priority: "medium"
