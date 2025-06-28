@@ -23,7 +23,10 @@ public class EmailSender {
 
     private static final String FROM_EMAIL = "s.aburumman96@gmail.com";
     private static final String PASSWORD = "mcrz fmjd qtio pgqe";
-    private static final String TO_EMAIL = "saraajoacademy@gmail.com";
+    private static final List<String> TO_EMAILS = Arrays.asList(
+    	    "saraajoacademy@gmail.com",
+    	    "mujahed.abuabdoh@joacademy.com"
+    	);
 
     private static Session createSession() {
         Properties props = new Properties();
@@ -38,6 +41,14 @@ public class EmailSender {
             }
         });
     }
+    
+    private static InternetAddress[] getRecipientAddresses(List<String> emails) throws AddressException {
+        InternetAddress[] addresses = new InternetAddress[emails.size()];
+        for (int i = 0; i < emails.size(); i++) {
+            addresses[i] = new InternetAddress(emails.get(i));
+        }
+        return addresses;
+    }
 
     public static void sendResultsEmail(List<Map<String, Object>> results, String subject, String allureReportUrl) {
         Session session = createSession();
@@ -45,7 +56,7 @@ public class EmailSender {
         try {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(FROM_EMAIL));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(TO_EMAIL));
+            message.setRecipients(Message.RecipientType.TO, getRecipientAddresses(TO_EMAILS));
             message.setSubject(subject);
 
             List<File> attachments = new ArrayList<>();
@@ -304,7 +315,7 @@ public class EmailSender {
         try {
             Message message = new MimeMessage(createSession());
             message.setFrom(new InternetAddress(FROM_EMAIL));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(TO_EMAIL));
+            message.setRecipients(Message.RecipientType.TO, getRecipientAddresses(TO_EMAILS));
             message.setSubject(subject);
 
             StringBuilder htmlBody = new StringBuilder();
