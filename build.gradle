@@ -51,6 +51,9 @@ publishing {
 def allureResultsDir = "$buildDir/allure-results"
 
 tasks.register('mainTests', Test) {
+    doFirst {
+        println "Running mainTests suite..."
+    }
     useTestNG {
         suites 'src/test/resources/testng.xml'
     }
@@ -60,6 +63,9 @@ tasks.register('mainTests', Test) {
 }
 
 tasks.register('retryTests', Test) {
+    doFirst {
+        println "Running retryTests suite..."
+    }
     useTestNG {
         suites 'src/test/resources/BackToNormalTry.xml'
     }

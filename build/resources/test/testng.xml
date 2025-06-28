@@ -8,6 +8,7 @@
             <class name="tests.ApiTest"/>
             <class name="tests.FailedTest"/>
             <class name="tests.Finalizer"/>
+            <class name="tests.BackToNormalTry"/>
         </classes>
     </test>
 </suite>

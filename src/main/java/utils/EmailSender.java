@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class EmailSender {
 
     private static final String FROM_EMAIL = "s.aburumman96@gmail.com";
-    private static final String PASSWORD = "bstk tgcp lecf wzlb";
+    private static final String PASSWORD = "mcrz fmjd qtio pgqe";
     private static final String TO_EMAIL = "saraajoacademy@gmail.com";
 
     private static Session createSession() {

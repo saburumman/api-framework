@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tests.ApiTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-06-01T10:52:43" hostname="AMLQASRQA4204" time="3.935">
+<testsuite name="tests.ApiTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-06-25T12:26:14" hostname="AMLQASRQA4204" time="144.344">
   <properties/>
-  <testcase name="executeApiFlow" classname="tests.ApiTest" time="3.935"/>
+  <testcase name="executeApiFlow" classname="tests.ApiTest" time="144.344"/>
   <system-out><![CDATA[API scenario started
 [INFO] Initializing API test execution...
 Loading YAML file: priorities.yaml
@@ -10,8 +10,10 @@ YAML loaded successfully.
 [INFO] Base URL: https://admin.joacademy.net
 [INFO] Loaded group: courses, APIs count: 1
 [INFO] Attempting to acquire auth token...
-Extracted Token: 4575762|qHSViSpwwRjV81QRNjPbsasUafrfQmGPvQKVJiXM
-[INFO] Auth token acquired: 4575762|qHSViSpwwRjV81QRNjPbsasUafrfQmGPvQKVJiXM
+Extracted Token: 4734532|473vGk4ZaWxH4vHfHFZlUuXQxcDJoBgTGN7Nt1ir
+[INFO] Auth token acquired: 4734532|473vGk4ZaWxH4vHfHFZlUuXQxcDJoBgTGN7Nt1ir
+[INFO]  API failed: Get User Courses (Status: 524)
+[INFO] Starting Retry #1 for failed APIs...
 [INFO]  API succeeded: Get User Courses
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>

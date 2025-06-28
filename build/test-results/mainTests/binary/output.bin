@@ -6,8 +6,10 @@
 .[INFO] Base URL: https://admin.joacademy.net
 -[INFO] Loaded group: courses, APIs count: 1
 ,[INFO] Attempting to acquire auth token...
-CExtracted Token: 4575762|qHSViSpwwRjV81QRNjPbsasUafrfQmGPvQKVJiXM
-N[INFO] Auth token acquired: 4575762|qHSViSpwwRjV81QRNjPbsasUafrfQmGPvQKVJiXM
+CExtracted Token: 4734532|473vGk4ZaWxH4vHfHFZlUuXQxcDJoBgTGN7Nt1ir
+N[INFO] Auth token acquired: 4734532|473vGk4ZaWxH4vHfHFZlUuXQxcDJoBgTGN7Nt1ir
+4[INFO]  API failed: Get User Courses (Status: 524)
+-[INFO] Starting Retry #1 for failed APIs...
 )[INFO]  API succeeded: Get User Courses
 API scenario started
 +[INFO] Initializing API test execution...
@@ -17,11 +19,11 @@
 .[INFO] Base URL: https://admin.joacademy.net
 +[INFO] Loaded group: files, APIs count: 1
 ,[INFO] Attempting to acquire auth token...
-CExtracted Token: 4575763|RX358c4a2JLlVoAevNsF8PIQ6MsE27mFsuSrXJmG
-N[INFO] Auth token acquired: 4575763|RX358c4a2JLlVoAevNsF8PIQ6MsE27mFsuSrXJmG
+CExtracted Token: 4734592|vO1LNijGx9xYzdQH0wy2twph0PGoSrxWGKd2LMxr
+N[INFO] Auth token acquired: 4734592|vO1LNijGx9xYzdQH0wy2twph0PGoSrxWGKd2LMxr
 =[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
 -[INFO] Starting Retry #1 for failed APIs...
-=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
+=[INFO]  API failed: Get Favorite Files - Fail (Status: 524)
 -[INFO] Starting Retry #2 for failed APIs...
-=[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
-8API FAILED: Get Favorite Files - Fail with status: 404
+=[INFO]  API failed: Get Favorite Files - Fail (Status: 524)
+8API FAILED: Get Favorite Files - Fail with status: 524

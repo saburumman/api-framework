@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tests.FailedTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2025-06-01T10:52:47" hostname="AMLQASRQA4204" time="4.37">
+<testsuite name="tests.FailedTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2025-06-25T12:28:38" hostname="AMLQASRQA4204" time="208.97">
   <properties/>
-  <testcase name="executeApiFlow" classname="tests.FailedTest" time="4.37">
-    <failure message="java.lang.AssertionError: API Get Favorite Files - Fail failed with status: 404" type="java.lang.AssertionError">java.lang.AssertionError: API Get Favorite Files - Fail failed with status: 404
+  <testcase name="executeApiFlow" classname="tests.FailedTest" time="208.97">
+    <failure message="java.lang.AssertionError: API Get Favorite Files - Fail failed with status: 524" type="java.lang.AssertionError">java.lang.AssertionError: API Get Favorite Files - Fail failed with status: 524
 	at org.testng.Assert.fail(Assert.java:110)
 	at tests.FailedTest.stepCheckResults(FailedTest.java:54)
 	at tests.FailedTest.executeApiFlow(FailedTest.java:34)
@@ -62,14 +62,14 @@ YAML loaded successfully.
 [INFO] Base URL: https://admin.joacademy.net
 [INFO] Loaded group: files, APIs count: 1
 [INFO] Attempting to acquire auth token...
-Extracted Token: 4575763|RX358c4a2JLlVoAevNsF8PIQ6MsE27mFsuSrXJmG
-[INFO] Auth token acquired: 4575763|RX358c4a2JLlVoAevNsF8PIQ6MsE27mFsuSrXJmG
+Extracted Token: 4734592|vO1LNijGx9xYzdQH0wy2twph0PGoSrxWGKd2LMxr
+[INFO] Auth token acquired: 4734592|vO1LNijGx9xYzdQH0wy2twph0PGoSrxWGKd2LMxr
 [INFO]  API failed: Get Favorite Files - Fail (Status: 404)
 [INFO] Starting Retry #1 for failed APIs...
-[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
+[INFO]  API failed: Get Favorite Files - Fail (Status: 524)
 [INFO] Starting Retry #2 for failed APIs...
-[INFO]  API failed: Get Favorite Files - Fail (Status: 404)
-API FAILED: Get Favorite Files - Fail with status: 404
+[INFO]  API failed: Get Favorite Files - Fail (Status: 524)
+API FAILED: Get Favorite Files - Fail with status: 524
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
