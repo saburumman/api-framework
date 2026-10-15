@@ -1,1 +1,1 @@
-{"total":1,"items":[{"uid":"2fd94da4a8a55817a271f2992526c85e","name":"APITestSuite","statistic":{"failed":0,"broken":0,"skipped":0,"passed":2,"unknown":0,"total":2}}]}
+{"total":2,"items":[{"uid":"2fd94da4a8a55817a271f2992526c85e","name":"APITestSuite","statistic":{"failed":0,"broken":1,"skipped":0,"passed":0,"unknown":0,"total":1}},{"uid":"60483efe5caaeacfb858f9fc1f1f0f10","name":"APIFlowSuite","statistic":{"failed":0,"broken":1,"skipped":0,"passed":0,"unknown":0,"total":1}}]}
