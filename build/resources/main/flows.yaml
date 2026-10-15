@@ -1,0 +1,96 @@
+# =====================================================================
+#  API FLOWS
+#  A flow is an ordered list of steps that share variables.
+#  Base URL and login come from priorities.yaml (login_api).
+#
+#  Run all flows:          gradlew flowTests
+#  Run some flows:         gradlew flowTests -Dflow=user_learning_journey
+#  Run by tag:             gradlew flowTests -DflowTags=smoke
+#  Pick environment:       gradlew flowTests -DENV=preprod   (or ENV=preprod in .env)
+#  Production is read-only: POST/PUT/PATCH/DELETE steps are blocked unless -DallowWrites=true
+#
+#  ---- Flow options ----
+#  description:        shown in Allure
+#  tags:               [smoke, regression]  -> used with -DflowTags
+#  envs:               [stg, preprod]       -> only run on these environments (default: all)
+#  login:              true (default) = log in with login_api first, token available as {{authToken}}
+#  continueOnFailure:  false (default) = stop at the first failed step, later steps are "skipped"
+#  vars:               starting variables for this flow
+#
+#  ---- Step options ----
+#  name, method (GET/POST/PUT/PATCH/DELETE), endpoint      (required: endpoint)
+#  query:    { page: 1 }                 query parameters
+#  headers:  { Accept-Language: ar }     extra headers
+#  payload:  JSON as a YAML map (recommended) or as a string '{"a":1}'
+#  form:     { field: value }       send as x-www-form-urlencoded instead of JSON
+#  auth:     true (default) = send "Authorization: Bearer {{authToken}}"
+#  expect:
+#    status: 200  or  [200, 201]         default: any 2xx
+#    body:                               JSON path -> expected value or matcher
+#      $.status: true
+#      $.data.id: "@notNull"
+#    maxTimeMs: 3000                     fail if slower
+#  extract:                              save values for later steps
+#    courseId: $.data.data[0].id
+#  retries: 2, retryDelayMs: 2000        retry this step only (default 0)
+#
+#  ---- Placeholders (anywhere: endpoint, query, headers, payload, expect) ----
+#  {{myVar}}        a var or an extracted value        {{authToken}}  current token
+#  {{env:NAME}}     .env / env var / -DNAME=...         {{baseUrl}}    API base URL
+#  {{auth_url}} or any other key under environments.<env> in priorities.yaml
+#                   (ENV-specific first: PREPROD_NAME)  {{env}}        stg / preprod / production
+#  {{$timestamp}} {{$uuid}} {{$randomInt}} {{$randomEmail}}
+#
+#  ---- Body matchers ----
+#  "@notNull" "@isNull" "@notEmpty" "@isEmpty" "@contains:text" "@matches:regex"
+#  "@size:3" "@minSize:1"     (or a plain value for an exact match)
+#
+#  JSON paths use REST Assured GPath: $.data.items[0].id, $.data.items.size(),
+#  $.data.items.find { it.slug == 'physics' }.id
+# =====================================================================
+
+vars: {}
+
+flows:
+
+  # Sample flow - adjust the body checks to the real GetNumbers response.
+  dvld_numbers:
+    description: "Logged-in citizen can load their DVLD numbers"
+    tags: [smoke]
+    steps:
+      - name: Get DVLD numbers
+        method: GET
+        endpoint: /api/DVLD/GetNumbers
+        expect:
+          status: 200
+          maxTimeMs: 10000
+        # Example: save a value for the next step (fix the path once you know the response shape)
+        # extract:
+        #   firstNumber: $[0].number
+
+  # TEMPLATE - copy to build a chained flow, then remove the leading "# ".
+  # It shows extracting a value and using it in the next step's URL, query and payload.
+  # dvld_details:
+  #   tags: [regression]
+  #   envs: [stg, preprod]               # writes data, so never on production
+  #   steps:
+  #     - name: List numbers
+  #       endpoint: /api/DVLD/GetNumbers
+  #       expect:
+  #         body:
+  #           $: "@notEmpty"
+  #       extract:
+  #         numberId: $[0].id
+  #     - name: Number details
+  #       endpoint: /api/DVLD/GetNumberDetails/{{numberId}}
+  #       expect:
+  #         body:
+  #           $.id: "{{numberId}}"
+  #     - name: Submit request
+  #       method: POST
+  #       endpoint: /api/DVLD/SubmitRequest
+  #       payload:
+  #         numberId: "{{numberId}}"      # stays a number in the JSON
+  #         note: "created by flow {{$timestamp}}"
+  #       expect:
+  #         status: [200, 201]
