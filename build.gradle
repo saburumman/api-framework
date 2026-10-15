@@ -50,6 +50,17 @@ publishing {
 // Correct test task configuration
 def allureResultsDir = "$buildDir/allure-results"
 
+// Settings passed with -D on the gradlew command line are forwarded to every test task, e.g.
+//   gradlew fullTest -DENV=preprod
+def forwardedProps = ['ENV', 'apiGroup', 'flow', 'flowTags', 'baseUrl', 'allowWrites', 'envFile',
+                      'API_LOGIN_ID', 'API_LOGIN_PASSWORD',
+                      'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_TO', 'MAIL_SEND_ON']
+tasks.withType(Test).configureEach {
+    forwardedProps.each { key ->
+        if (System.getProperty(key) != null) systemProperty key, System.getProperty(key)
+    }
+}
+
 tasks.register('mainTests', Test) {
     doFirst {
         println "Running mainTests suite..."
@@ -75,6 +86,24 @@ tasks.register('retryTests', Test) {
     mustRunAfter 'mainTests'
 }
 
+tasks.register('flowTests', Test) {
+    doFirst {
+        println "Running API flow suite..."
+    }
+    useTestNG {
+        suites 'src/test/resources/flows.xml'
+    }
+    systemProperty 'allure.results.directory', allureResultsDir
+    // e.g. gradlew flowTests -DENV=preprod -Dflow=user_learning_journey -DflowTags=smoke
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+    }
+    ignoreFailures = true
+    outputs.upToDateWhen { false }
+    mustRunAfter 'mainTests'
+}
+
 tasks.register('fullTest') {
-    dependsOn 'mainTests', 'retryTests'
+    dependsOn 'mainTests', 'flowTests', 'retryTests'
 }

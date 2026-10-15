@@ -131,7 +131,17 @@ public class Main {
 
     @Step("Executing API")
     public static Map<String, Object> executeApi(APIBase apiBase, APIInfo api) {
-        Map<String, Object> result = apiBase.sendRequest(api.method, api.endpoint, api.payload);
+        String blocked = FlowRunner.writeBlockedReason(api.method);
+        Map<String, Object> result;
+        if (blocked != null) {
+            Logger.info(blocked);
+            result = new HashMap<>();
+            result.put("status_code", -1);
+            result.put("response", blocked);
+            result.put("base_url", apiBase.getBaseUrl());
+        } else {
+            result = apiBase.sendRequest(api.method, api.endpoint, api.payload);
+        }
         if (result == null) result = new HashMap<>();
         result.put("api", api.name);
         result.put("endpoint", api.endpoint);

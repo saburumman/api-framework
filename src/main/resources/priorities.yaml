@@ -1,22 +1,50 @@
-env: "staging"
-base_url: "https://admin.joacademy.net"
+# ======================================================================
+#  Sanad API test configuration
+#
+#  Pick the environment with ENV=stg | preprod | production
+#  (in .env, as an environment variable, or -DENV=preprod). Default: env below.
+#  Every key under an environment can be used as a {{placeholder}}, e.g. {{auth_url}}.
+#  The login national ID and password ({{env:NAME}}) come from .env - see .env.example.
+# ======================================================================
+env: "stg"
 
+environments:
+  stg:
+    base_url: "https://appv2.sanad.gov.jo"        # API host
+    auth_url: "https://staging.jordan.gov.jo"     # OAuth token server
+    client_id: "HrFZUo8o6dg4gUDzkYAi"
+    client_secret: "k22DtPUNkpFbO3JqCDwn"
+  preprod:
+    base_url: ""          # TODO: pre-production API host
+    auth_url: ""          # TODO: pre-production token server
+    client_id: ""
+    client_secret: ""
+  production:
+    base_url: ""          # TODO: production API host
+    auth_url: ""          # TODO: production token server
+    client_id: ""
+    client_secret: ""
+    read_only: true       # flows may only send GET requests here (override with -DallowWrites=true)
+
+# OAuth2 "password" login - the access_token is sent as "Authorization: Bearer ..." on every API call
 login_api:
-  name: "User Login"
-  endpoint: "/api/v1/login"
+  name: "Sanad Login"
+  endpoint: "{{auth_url}}/mga/sps/oauth/oauth20/token"
   method: "POST"
   priority: "high"
-  payload: '{"email":"mohjoac2@joacademy.com","password":"123456"}'
+  form:
+    grant_type: "password"
+    client_id: "{{client_id}}"                # from environments.<env> above
+    client_secret: "{{client_secret}}"
+    username: "{{env:API_LOGIN_ID}}"          # national ID - from .env
+    password: "{{env:API_LOGIN_PASSWORD}}"    # from .env
+    scope: "openid"
+  token_path: "access_token"
 
+# Simple health-check groups (each group = one test in ApiTest, with retries)
 groups:
-  courses:
-    - name: "Get User Courses"
-      endpoint: "/api/v2/courses/user?page=1&per_page=12&satus=true"
+  dvld:
+    - name: "DVLD Get Numbers"
+      endpoint: "/api/DVLD/GetNumbers"
       method: "GET"
-      priority: "medium"
-
-  files:
-    - name: "Get Favorite Files"
-      endpoint: "/api/v1/get-user-files?page=1"
-      method: "GET"
-      priority: "medium"
+      priority: "high"
