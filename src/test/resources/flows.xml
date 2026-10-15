@@ -1,0 +1,12 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="APIFlowSuite">
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+    <test name="Flows">
+        <classes>
+            <class name="tests.FlowTest"/>
+            <class name="tests.Finalizer"/>
+        </classes>
+    </test>
+</suite>
