@@ -1,49 +1,67 @@
 package tests;
 
+import config.PrioritiesReader;
+import core.Main;
+import io.qameta.allure.*;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
-import io.qameta.allure.*;
-import core.Main;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * Health check: runs every API group in priorities.yaml (one test per group, with retries).
+ * Run a single group with -DapiGroup=dvld.
+ */
 @Listeners({io.qameta.allure.testng.AllureTestNg.class})
 public class ApiTest {
 
-    @Test(description = "Run Full API Scenario with Allure Steps")
-    @Epic("API Execution")
-    @Feature("Full Flow")
-    @Story("Initial Run + Retries")
-    @Severity(SeverityLevel.CRITICAL)
-    public void executeApiFlow() {
-        System.setProperty("apiGroup", "courses");
-        stepStartScenario();
-        List<Map<String, Object>> results = Main.runFullScenario();
-        stepCheckResults(results);
-
-        // Assertions here to ensure the results are valid
-        Assert.assertNotNull(results, "Results list should not be null");
-        Assert.assertFalse(results.isEmpty(), "Results list should not be empty");
+    @DataProvider(name = "groups")
+    public Object[][] groups() {
+        String only = System.getProperty("apiGroup");
+        PrioritiesReader reader = new PrioritiesReader();
+        reader.load("priorities.yaml");
+        List<String> names = new ArrayList<>(reader.groupedApis.keySet());
+        if (only != null && !only.isEmpty()) {
+            if (!names.contains(only)) throw new IllegalArgumentException("Group '" + only + "' not found. Available: " + names);
+            names = List.of(only);
+        }
+        Object[][] data = new Object[names.size()][1];
+        for (int i = 0; i < names.size(); i++) data[i][0] = names.get(i);
+        return data;
     }
 
-    @Step("Starting the API scenario")
-    public void stepStartScenario() {
-        System.out.println("API scenario started");
+    @Test(dataProvider = "groups", description = "Run API group with retries")
+    @Epic("API Execution")
+    @Feature("Health Check")
+    @Story("Initial Run + Retries")
+    @Severity(SeverityLevel.CRITICAL)
+    public void executeApiGroup(String group) {
+        Allure.getLifecycle().updateTestCase(tc -> tc.setName("API group: " + group));
+        String previous = System.getProperty("apiGroup");
+        System.setProperty("apiGroup", group);
+        try {
+            List<Map<String, Object>> results = Main.runFullScenario();
+            Assert.assertNotNull(results, "Results list should not be null");
+            Assert.assertFalse(results.isEmpty(), "No results for group '" + group + "' (check login and config)");
+            checkResults(results);
+        } finally {
+            if (previous == null) System.clearProperty("apiGroup"); else System.setProperty("apiGroup", previous);
+        }
     }
 
     @Step("Checking API results")
-    public void stepCheckResults(List<Map<String, Object>> results) {
+    public void checkResults(List<Map<String, Object>> results) {
+        List<String> failed = new ArrayList<>();
         for (Map<String, Object> result : results) {
-            int statusCode = (int) result.get("status_code");
-            String apiName = (String) result.get("api");
-            if (statusCode != 200) {
-                System.out.println("API FAILED: " + apiName + " with status: " + statusCode);
-                // Fail test immediately on API failure
-                Assert.fail("API " + apiName + " failed with status: " + statusCode);
+            Object status = result.get("status_code");
+            if (!(status instanceof Integer) || (Integer) status != 200) {
+                failed.add(result.get("api") + " (status " + status + ")");
             }
         }
+        if (!failed.isEmpty()) Assert.fail("Failed APIs after retries: " + String.join(", ", failed));
     }
 }

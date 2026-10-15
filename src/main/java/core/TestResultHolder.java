@@ -14,11 +14,19 @@ public class TestResultHolder {
     private static final List<Map<String, Object>> allResults = new ArrayList<>();
     private static final List<Map<String, Object>> failedResults = new ArrayList<>();
 
-    public static void addResults(List<Map<String, Object>> results) {
+    public static synchronized void addResults(List<Map<String, Object>> results) {
         allResults.addAll(results);
         for (Map<String, Object> result : results) {
-            int statusCode = (int) result.getOrDefault("status_code", -1);
-            if (statusCode != 200) {
+            Object passed = result.get("passed");
+            boolean failed;
+            if (passed instanceof Boolean) {
+                // Flow steps: a 200 can still fail on a body/time assertion
+                failed = !((Boolean) passed);
+            } else {
+                Object status = result.getOrDefault("status_code", -1);
+                failed = !(status instanceof Integer) || (Integer) status != 200;
+            }
+            if (failed) {
                 failedResults.add(result);
             }
         }
@@ -39,11 +47,13 @@ public class TestResultHolder {
     }
 
     private static APIInfo mapToApiInfo(Map<String, Object> map) {
-        String name = (String) map.getOrDefault("name", "Unknown");
-        String endpoint = (String) map.getOrDefault("endpoint", "");
-        String method = (String) map.getOrDefault("method", "GET");
-        String priority = (String) map.getOrDefault("priority", "");
-        String payload = (String) map.getOrDefault("payload", "");
+        // Results store the API name under "api" (older maps used "name")
+        String name = String.valueOf(map.getOrDefault("api", map.getOrDefault("name", "Unknown")));
+        String endpoint = String.valueOf(map.getOrDefault("endpoint", ""));
+        String method = String.valueOf(map.getOrDefault("method", "GET"));
+        String priority = String.valueOf(map.getOrDefault("priority", ""));
+        Object payloadObj = map.get("payload");
+        String payload = payloadObj == null ? "" : String.valueOf(payloadObj);
 
         APIInfo apiInfo = new APIInfo(name, endpoint, method, priority, payload);
 
@@ -85,7 +95,7 @@ public class TestResultHolder {
     // Optional: Convert APIInfo back to Map<String,Object>
     public static Map<String, Object> apiInfoToMap(APIInfo apiInfo) {
         Map<String, Object> map = new HashMap<>();
-        map.put("name", apiInfo.getName());
+        map.put("api", apiInfo.getName());
         map.put("endpoint", apiInfo.getEndpoint());
         map.put("method", apiInfo.getMethod());
         map.put("priority", apiInfo.getPriority());

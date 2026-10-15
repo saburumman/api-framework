@@ -25,8 +25,9 @@ public class PrioritiesReader {
             Map<String, Object> obj = yaml.load(in);
             System.out.println("YAML loaded successfully.");
 
-            env = obj.get("env").toString();
-            baseUrl = obj.get("base_url").toString();
+            // Picks stg / preprod / production (ENV setting, else "env:" in the yaml) and its base URL
+            baseUrl = Environments.resolve(obj);
+            env = Environments.active();
 
             // Load login API
             if (obj.containsKey("login_api")) {
@@ -38,6 +39,9 @@ public class PrioritiesReader {
                         loginObj.getOrDefault("priority", "high").toString(),
                         loginObj.get("payload") != null ? loginObj.get("payload").toString() : null
                 );
+                if (loginObj.get("form") instanceof Map) loginApi.form.putAll((Map<String, Object>) loginObj.get("form"));
+                if (loginObj.get("headers") instanceof Map) loginApi.headers.putAll((Map<String, Object>) loginObj.get("headers"));
+                if (loginObj.get("token_path") != null) loginApi.tokenPath = loginObj.get("token_path").toString();
             }
 
             // Load grouped APIs
@@ -73,6 +77,9 @@ public class PrioritiesReader {
                 }
             }
 
+        } catch (IllegalStateException e) {
+            // Configuration mistakes (unknown environment, missing base_url) should stop the run with a clear message
+            throw e;
         } catch (Exception e) {
             System.err.println("Failed to load YAML file.");
             e.printStackTrace();

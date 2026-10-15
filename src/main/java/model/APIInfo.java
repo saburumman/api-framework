@@ -10,6 +10,13 @@ public class APIInfo {
     public String payload;
     public int lastStatusCode = 0;
 
+    /** Form fields (application/x-www-form-urlencoded). When set, they are sent instead of the JSON payload. */
+    public java.util.Map<String, Object> form = new java.util.LinkedHashMap<>();
+    /** Extra headers for this request. */
+    public java.util.Map<String, Object> headers = new java.util.LinkedHashMap<>();
+    /** For login_api: JSON path of the token in the response (default: first token/access_token field found). */
+    public String tokenPath;
+
     // New fields for recovery email logic
     public Instant firstFailureTime;
     public Instant recoveryTime;

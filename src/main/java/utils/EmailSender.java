@@ -19,11 +19,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import config.Secrets;
+
 public class EmailSender {
 
-    private static final String FROM_EMAIL = "s.aburumman96@gmail.com";
-    private static final String PASSWORD = "mcrz fmjd qtio pgqe";
-    private static final List<String> TO_EMAILS = Arrays.asList(
+    // Credentials come from env vars / -D properties (GitHub Secrets in CI). Never hardcode them.
+    //   MAIL_USERNAME = Gmail address used to send the report
+    //   MAIL_PASSWORD = Gmail App Password for that account
+    private static final String FROM_EMAIL = Secrets.get("MAIL_USERNAME", "");
+    // Gmail shows App Passwords in groups of 4 ("abcd efgh ..."); the spaces are not part of the password
+    private static final String PASSWORD = Secrets.get("MAIL_PASSWORD", "").replace(" ", "");
+    // MAIL_TO in .env (comma-separated) overrides the default recipients below
+    private static final List<String> TO_EMAILS = Secrets.get("MAIL_TO") != null
+            ? Arrays.stream(Secrets.get("MAIL_TO").split(",")).map(String::trim).filter(x -> !x.isEmpty()).collect(Collectors.toList())
+            : Arrays.asList(
     	    "saraajoacademy@gmail.com",
     	    "mujahed.abuabdoh@joacademy.com"
     	);
@@ -50,7 +59,16 @@ public class EmailSender {
         return addresses;
     }
 
+    private static boolean credentialsMissing() {
+        if (FROM_EMAIL.isEmpty() || PASSWORD.isEmpty()) {
+            System.out.println("[EMAIL] MAIL_USERNAME / MAIL_PASSWORD not set - skipping email.");
+            return true;
+        }
+        return false;
+    }
+
     public static void sendResultsEmail(List<Map<String, Object>> results, String subject, String allureReportUrl) {
+        if (credentialsMissing()) return;
         Session session = createSession();
 
         try {
@@ -312,6 +330,7 @@ public class EmailSender {
     }
 
     public static void sendBackToNormalSuccess(List<APIInfo> recoveredAPIs, String subject) {
+        if (credentialsMissing()) return;
         try {
             Message message = new MimeMessage(createSession());
             message.setFrom(new InternetAddress(FROM_EMAIL));
