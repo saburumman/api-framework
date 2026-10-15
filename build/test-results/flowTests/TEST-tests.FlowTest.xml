@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="tests.FlowTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-15T12:20:53" hostname="SARAABURO-LAP" time="3.043">
+  <properties/>
+  <testcase name="runFlow[0](dvld_numbers)" classname="tests.FlowTest" time="3.043"/>
+  <system-out><![CDATA[Loading YAML file: priorities.yaml
+YAML loaded successfully.
+[CONFIG] Loaded 6 value(s) from C:\Users\Sara.ro\IdeaProjects\api-framework\.env
+[ENV] Running against: STG -> https://appv2.sanad.gov.jo
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
